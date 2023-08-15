@@ -16,7 +16,8 @@ TCPNetwork::TCPNetwork(const char* _serverIP, int _serverPort)
 	inet_pton(AF_INET, _serverIP, &m_servAddr.sin_addr);
 	m_servAddr.sin_port = htons(_serverPort);
 
-	if (bind(m_hSocketServer, (SOCKADDR*)&m_servAddr, sizeof(m_servAddr)) == SOCKET_ERROR)	throw L"Binding Error";
+	if (bind(m_hSocketServer, (SOCKADDR*)&m_servAddr, sizeof(m_servAddr)) == SOCKET_ERROR)	
+		throw L"Binding Error";
 
 	m_pSelector = new Selector(m_hSocketServer);
 }
