@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <string>
 
 class User;
 
@@ -31,5 +32,7 @@ public:
 
 	bool AddUser(unsigned short _id, User* _pUser);
 	User* GetUser(unsigned short _id);
+
+	User* FindUserByNickname(const std::wstring& _nickname);
 };
 

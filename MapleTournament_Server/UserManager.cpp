@@ -1,4 +1,5 @@
 #include "UserManager.h"
+#include "User.h"
 
 #include <cstdio>
 
@@ -29,4 +30,18 @@ User* UserManager::GetUser(unsigned short _id)
 	if (pUser == m_mapUser.end()) return nullptr;
 
 	return pUser->second;
+}
+
+User* UserManager::FindUserByNickname(const std::wstring& _nickname) 
+{
+	std::map<uint16_t, User*>::const_iterator iter = m_mapUser.cbegin();
+	std::map<uint16_t, User*>::const_iterator iterEnd = m_mapUser.cend();
+
+	for (; iter != iterEnd; iter++) {
+		if (iter->second->GetNickname() == _nickname) {
+			return iter->second;
+		}
+	}
+
+	return nullptr;
 }

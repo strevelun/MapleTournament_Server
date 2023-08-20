@@ -1,6 +1,8 @@
 #include "PacketHandler.h"
 #include "../UserManager.h"
 #include "../User.h"
+#include "FailedLoginPacket.h"
+#include "OKLoginPacket.h"
 
 #include <iostream>
 
@@ -19,6 +21,7 @@ void PacketHandler::C_Enter(char* _packet)
 	uint32_t nicknameSize = wcslen((wchar_t*)_packet);
 	wchar_t* nickname = new wchar_t[(nicknameSize * 2) + 2];
 	memcpy(nickname, _packet, (nicknameSize * 2) + 2);
+	std::wstring strNickname = nickname;
 
 	User* pUser = UserManager::GetInst()->GetUser(id);
 	if (pUser == nullptr)
@@ -26,6 +29,20 @@ void PacketHandler::C_Enter(char* _packet)
 		printf("C_Enter 처리 도중 에러! : %d는 찾을 수 없는 id입니다.\n", id);
 		return;
 	}
-	pUser->SetNickname(nickname);
-	std::wcout << nickname << "님 로그인 완료!" << '\n';
+
+	User* pOtherUser = UserManager::GetInst()->FindUserByNickname(pUser->GetNickname());
+	if(!pOtherUser) 
+		pUser->SetNickname(strNickname);
+	
+	if (!pOtherUser || pOtherUser->GetId() == pUser->GetId())
+	{
+		OKLoginPacket p;
+		send((SOCKET)pUser->GetId(), p.GetPacketBuffer(), p.GetPacketSize(), 0);
+		std::wcout << strNickname << "님 로그인 완료!" << '\n';
+	}
+	else
+	{
+		FailedLoginPacket p;
+		send((SOCKET)pUser->GetId(), p.GetPacketBuffer(), p.GetPacketSize(), 0);
+	}
 }

@@ -11,6 +11,8 @@ enum class ePacketType
 	S_Connect,
 	C_Enter,
 	S_Enter,
+	S_OKLogin,
+	S_FailedLogin,
 	C_Exit
 };
 
