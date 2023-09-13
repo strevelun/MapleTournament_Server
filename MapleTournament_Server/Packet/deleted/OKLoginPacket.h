@@ -4,7 +4,7 @@ class OKLoginPacket :
     public Packet
 {
 public:
-    OKLoginPacket();
+    OKLoginPacket(const wchar_t* _nickname);
     ~OKLoginPacket();
 };
 

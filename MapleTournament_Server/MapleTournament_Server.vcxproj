@@ -127,32 +127,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="App.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Packet\ConnectPacket.cpp" />
-    <ClCompile Include="Packet\FailedLoginPacket.cpp" />
-    <ClCompile Include="Packet\OKLoginPacket.cpp" />
-    <ClCompile Include="Packet\Packet.cpp" />
+    <ClCompile Include="Managers\RoomManager.cpp" />
+    <ClCompile Include="Managers\SessionManager.cpp" />
+    <ClCompile Include="Managers\UserManager.cpp" />
+    <ClCompile Include="Network\Room.cpp" />
+    <ClCompile Include="Network\Selector.cpp" />
+    <ClCompile Include="Network\Session.cpp" />
+    <ClCompile Include="Network\TCPListener.cpp" />
+    <ClCompile Include="Network\User.cpp" />
     <ClCompile Include="Packet\PacketHandler.cpp" />
-    <ClCompile Include="Selector.cpp" />
     <ClCompile Include="ServerApp.cpp" />
-    <ClCompile Include="TCPNetwork.cpp" />
-    <ClCompile Include="User.cpp" />
-    <ClCompile Include="UserManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="App.h" />
-    <ClInclude Include="Packet\ConnectPacket.h" />
-    <ClInclude Include="Packet\FailedLoginPacket.h" />
-    <ClInclude Include="Packet\OKLoginPacket.h" />
-    <ClInclude Include="Packet\Packet.h" />
+    <ClInclude Include="Managers\RoomManager.h" />
+    <ClInclude Include="Managers\SessionManager.h" />
+    <ClInclude Include="Managers\UserManager.h" />
+    <ClInclude Include="Network\Room.h" />
+    <ClInclude Include="Network\Selector.h" />
+    <ClInclude Include="Network\Session.h" />
+    <ClInclude Include="Network\TCPListener.h" />
+    <ClInclude Include="Network\User.h" />
     <ClInclude Include="Packet\PacketHandler.h" />
-    <ClInclude Include="Selector.h" />
     <ClInclude Include="ServerApp.h" />
     <ClInclude Include="Setting.h" />
-    <ClInclude Include="TCPNetwork.h" />
-    <ClInclude Include="User.h" />
-    <ClInclude Include="UserManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

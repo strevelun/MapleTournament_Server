@@ -10,7 +10,7 @@ class UserManager
 private:
 	static UserManager* m_inst;
 
-	std::map<uint16_t, User*> m_mapUser; // key : SOCKET ¹øÈ£
+	std::map<std::wstring, User*> m_mapUser;
 
 	UserManager();
 	~UserManager();
@@ -30,9 +30,7 @@ public:
 		m_inst = nullptr;
 	}
 
-	bool AddUser(unsigned short _id, User* _pUser);
-	User* GetUser(unsigned short _id);
-
-	User* FindUserByNickname(const std::wstring& _nickname);
+	User* CreateUser(wchar_t* _nickname);
+	User* FindUser(wchar_t* _nickname);
 };
 

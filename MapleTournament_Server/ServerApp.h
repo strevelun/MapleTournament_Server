@@ -1,18 +1,24 @@
 #pragma once
-#include "App.h"
 
-class TCPNetwork;
+#include "Network/TCPListener.h"
 
-class ServerApp :
-    public App
+class Selector;
+class Session;
+
+class ServerApp
 {
 private:
-    TCPNetwork* m_pNetwork;
+    TCPListener* m_pListener;
+    Selector* m_pSelector;
 
 public:
-    ServerApp(const char* _serverIP, int _serverPort);
+    ServerApp();
     ~ServerApp();
 
-    void Run() override;
+    bool Init(const char* _ip, int _port);
+    void Run();
+
+private:
+    void ReceivePacket(Session* _pSession);
 };
 

@@ -13,84 +13,84 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="소스 파일\Packet">
+    <Filter Include="Packet">
       <UniqueIdentifier>{b2168ef9-02fc-489b-96b0-85f22ba5bfa6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Managers">
+      <UniqueIdentifier>{4b0c7eb9-f7e8-43a8-978d-c4da389b4b01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{bb4be494-14bc-4fa1-9080-43a210db29ae}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="App.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="ServerApp.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="TCPNetwork.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Selector.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="UserManager.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="User.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Packet\ConnectPacket.cpp">
-      <Filter>소스 파일\Packet</Filter>
-    </ClCompile>
-    <ClCompile Include="Packet\Packet.cpp">
-      <Filter>소스 파일\Packet</Filter>
-    </ClCompile>
     <ClCompile Include="Packet\PacketHandler.cpp">
-      <Filter>소스 파일\Packet</Filter>
+      <Filter>Packet</Filter>
     </ClCompile>
-    <ClCompile Include="Packet\FailedLoginPacket.cpp">
-      <Filter>소스 파일\Packet</Filter>
+    <ClCompile Include="Managers\SessionManager.cpp">
+      <Filter>Managers</Filter>
     </ClCompile>
-    <ClCompile Include="Packet\OKLoginPacket.cpp">
-      <Filter>소스 파일\Packet</Filter>
+    <ClCompile Include="Network\Selector.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\Session.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\TCPListener.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\User.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Managers\RoomManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\Room.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Managers\UserManager.cpp">
+      <Filter>Managers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Setting.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="App.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="ServerApp.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="TCPNetwork.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Selector.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="UserManager.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="User.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Packet\ConnectPacket.h">
-      <Filter>소스 파일\Packet</Filter>
-    </ClInclude>
-    <ClInclude Include="Packet\Packet.h">
-      <Filter>소스 파일\Packet</Filter>
-    </ClInclude>
     <ClInclude Include="Packet\PacketHandler.h">
-      <Filter>소스 파일\Packet</Filter>
+      <Filter>Packet</Filter>
     </ClInclude>
-    <ClInclude Include="Packet\FailedLoginPacket.h">
-      <Filter>소스 파일\Packet</Filter>
+    <ClInclude Include="Managers\SessionManager.h">
+      <Filter>Managers</Filter>
     </ClInclude>
-    <ClInclude Include="Packet\OKLoginPacket.h">
-      <Filter>소스 파일\Packet</Filter>
+    <ClInclude Include="Network\Selector.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\Session.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\TCPListener.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\User.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Managers\RoomManager.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\Room.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Managers\UserManager.h">
+      <Filter>Managers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
