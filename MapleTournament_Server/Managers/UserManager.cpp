@@ -22,7 +22,7 @@ User* UserManager::CreateUser(wchar_t* _nickname)
 	return pUser;
 }
 
-User* UserManager::FindUser(wchar_t* _nickname)
+User* UserManager::FindUser(const wchar_t* _nickname)
 {
 	std::map<std::wstring, User*>::iterator iter = m_mapUser.find(_nickname);
 	if (iter != m_mapUser.end())

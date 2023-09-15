@@ -4,7 +4,7 @@
 #include <WinSock2.h>
 
 std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallback = {
-	{ ePacketType::C_EnterLobby, PacketHandler::C_Enter },
+	{ ePacketType::C_EnterLobby, PacketHandler::C_EnterLobby },
 	{ ePacketType::C_OKLogin, PacketHandler::C_OKLogin },
 	{ ePacketType::C_Exit, PacketHandler::C_Exit },
 	{ ePacketType::C_CreateRoom, PacketHandler::C_CreateRoom },

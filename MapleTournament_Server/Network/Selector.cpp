@@ -9,23 +9,19 @@ Selector::Selector(SOCKET _hSocketServer)
 {
 	FD_ZERO(&m_fdReads);
 	FD_SET_EX(m_hSocketServer, &m_fdUser, nullptr);
-
-	m_vecClientSocket.reserve(64);
 }
 
 Selector::~Selector()
 {
 }
 
-const std::vector<Session*>& Selector::Select()
+void Selector::Select()
 {
 	SOCKET clientSocket;
-	if(!m_vecClientSocket.empty())
-		m_vecClientSocket.clear();
 
 	m_fdReads = m_fdUser;
 	int	iRet = select(0, &m_fdReads, 0, 0, 0);
-	if (iRet == SOCKET_ERROR) throw L"select returns SOCKET_ERROR in Selector::Select()";
+	if (iRet == SOCKET_ERROR) return;
 
 	for (u_int i = 0; i < m_fdUser.fd_count; i++)
 	{
@@ -45,9 +41,53 @@ const std::vector<Session*>& Selector::Select()
 			}
 			else
 			{
-				m_vecClientSocket.push_back(m_fdUser.fd_array_session[i]);
+				Session* pSession = m_fdUser.fd_array_session[i];
+				int					recvSize, totalSize = 0;
+				u_short				packetSize = 0;
+				char				recvBuffer[255];
+				SOCKET				clientSocket = pSession->GetSocket();
+
+				pSession->LoadUnprocessedPacket(recvBuffer, totalSize);
+
+				recvSize = recv(clientSocket, recvBuffer + totalSize, sizeof(recvBuffer) - totalSize, 0);
+				if (recvSize == SOCKET_ERROR)
+				{
+					char buffer[255];
+					u_short count = sizeof(u_short);
+					*(u_short*)(buffer + count) = (u_short)ePacketType::S_Exit;		count += sizeof(u_short);
+					User* pUser = pSession->GetUser();
+					const wchar_t* str = pUser->GetNickname();
+					memcpy(buffer + count, str, wcslen(str) * 2);			                    count += (u_short)wcslen(str) * 2;
+					*(wchar_t*)(buffer + count) = L'\0';								        count += 2;
+					*(u_short*)buffer = count;
+					SessionManager::GetInst()->SendAll(buffer, eSessionState::Lobby);
+
+					RemoveSocket(clientSocket);
+					SessionManager::GetInst()->RemoveSession(clientSocket);
+					closesocket(clientSocket);
+					return;
+				}
+
+				totalSize += recvSize;
+
+				while (totalSize >= sizeof(u_short))
+				{
+					packetSize = *(u_short*)recvBuffer;
+					if (packetSize > totalSize)
+					{
+						pSession->SaveUnprocessedPacket(recvBuffer, totalSize);
+						break;
+					}
+
+					char* temp = recvBuffer;								temp += sizeof(u_short);
+					u_short type = *(u_short*)temp;							temp += sizeof(u_short);
+
+					pSession->ProcessPacket((ePacketType)type, temp);
+
+					totalSize -= packetSize;
+					memcpy(recvBuffer, recvBuffer + packetSize, totalSize);
+				}
 			}
 		}
 	}
-	return m_vecClientSocket;
 }

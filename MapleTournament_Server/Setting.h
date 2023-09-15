@@ -13,6 +13,7 @@ enum class ePacketType
 	S_FailedLogin,
 	C_CreateRoom,
 	S_CreateRoom,
+	S_NotifyCreateRoom,
 	S_SendSessions,
 	S_SendRooms,
 	S_EnterOtherUser,
@@ -20,6 +21,18 @@ enum class ePacketType
 	S_Chat,
 	C_JoinRoom,
 	S_JoinRoom,
+	S_JoinRoomFail,
+	C_LeaveRoom,
+	S_NotifyJoinedUser
+};
+
+enum class eSessionState
+{
+	None,
+	Login,
+	Lobby,
+	WatingRoom,
+	InGame
 };
 
 #endif

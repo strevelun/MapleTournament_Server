@@ -8,11 +8,12 @@
 #include "../Setting.h"
 #include "../Network/Selector.h"
 
+#include <winsock2.h>
 #include <iostream>
 
 typedef unsigned short ushort;
 
-void PacketHandler::C_Enter(Session* _pSession, char* _packet)
+void PacketHandler::C_EnterLobby(Session* _pSession, char* _packet)
 {
 	SOCKET clientSocket = _pSession->GetSocket();
 	User* pUser = _pSession->GetUser();
@@ -21,7 +22,7 @@ void PacketHandler::C_Enter(Session* _pSession, char* _packet)
 	ushort count;
 
 	// 내가 로그인하기 전에 먼저 로그인했던 세션들 정보 가져오기
-	/* 로비&웨이팅룸에 있는 유저에게만! */
+	/* 로비에 있는 유저에게만! */
 	const std::vector<Session*>& vecSession = SessionManager::GetInst()->GetVecSession();
 	size_t sessionSize = vecSession.size() - 1; // 자기 자신은 제외
 	char buffer[255];
@@ -36,7 +37,7 @@ void PacketHandler::C_Enter(Session* _pSession, char* _packet)
 		s = vecSession[i]->GetSocket();
 		if (s == clientSocket) continue;
 		eSessionState eState = vecSession[i]->GetSessionState();
-		if (eState != eSessionState::Lobby && eState != eSessionState::WatingRoom) continue;
+		if (eState != eSessionState::Lobby) continue;
 		User* pUser = vecSession[i]->GetUser();
 		str = pUser->GetNickname();
 		memcpy(buffer + count, str, wcslen(str) * 2);							count += (ushort)wcslen(str) * 2;
@@ -47,25 +48,25 @@ void PacketHandler::C_Enter(Session* _pSession, char* _packet)
 
 	// 룸 개수
 	// 아이디 / 상태 / 제목 / 방장 / 인원
-	const std::vector<Room*>& listRoom = RoomManager::GetInst()->GetRoomList();
+	const std::map<unsigned int, Room*>& listRoom = RoomManager::GetInst()->GetRoomList();
 	u_int size = listRoom.size();
 	if (size >= 1)
 	{
 		count = sizeof(ushort);
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_SendRooms;		count += sizeof(ushort);
 		*(ushort*)(buffer + count) = (ushort)size;							count += sizeof(ushort);
-		for (int i = 0; i < size; i++)
+		for (auto& room : listRoom)
 		{
-			*(UINT*)(buffer + count) = listRoom[i]->GetId();			count += sizeof(UINT);
-			*(ushort*)(buffer + count) = (ushort)listRoom[i]->GetRoomState();			count += sizeof(ushort);
-			const wchar_t* title = listRoom[i]->GetRoomTitle();
+			*(UINT*)(buffer + count) = room.second->GetId();			count += sizeof(UINT);
+			*(ushort*)(buffer + count) = (ushort)room.second->GetRoomState();			count += sizeof(ushort);
+			const wchar_t* title = room.second->GetRoomTitle();
 			memcpy(buffer + count, title, wcslen(title) * 2);			count += (ushort)wcslen(title) * 2;
 			*(wchar_t*)(buffer + count) = L'\0';									count += 2;
-			User* pUser = listRoom[i]->GetFirstUser();
+			User* pUser = room.second->GetRoomOwner();
 			const wchar_t* pOwnerNickname = pUser->GetNickname();
 			memcpy(buffer + count, pOwnerNickname, wcslen(pOwnerNickname) * 2);			count += (ushort)wcslen(pOwnerNickname) * 2;
 			*(wchar_t*)(buffer + count) = L'\0';									count += 2;
-			*(ushort*)(buffer + count) = (ushort)listRoom[i]->GetUserCount();			count += sizeof(ushort);
+			*(ushort*)(buffer + count) = (ushort)room.second->GetUserCount();			count += sizeof(ushort);
 		}
 		*(wchar_t*)buffer = count;
 		send(clientSocket, buffer, count, 0);
@@ -137,15 +138,16 @@ void PacketHandler::C_CreateRoom(Session* _pSession, char* _packet)
 	SOCKET clientSocket = _pSession->GetSocket();
 	Room* pRoom = RoomManager::GetInst()->CreateRoom((wchar_t*)_packet);
 	Session* pSession = SessionManager::GetInst()->FindSession(clientSocket);
+	pSession->ChangeSessionState(eSessionState::WatingRoom);
 	User* pMyUser = pSession->GetUser();
-	pRoom->AddUser(pMyUser);
+	pRoom->AddUser(pMyUser, eMemberType::Owner);
 	const wchar_t* nickname = pMyUser->GetNickname();
 
 	std::wcout << clientSocket << "가 방 생성!" << '\n';
 
 	char buffer[255];
 	ushort count = sizeof(ushort);
-	*(ushort*)(buffer + count) = (ushort)ePacketType::S_CreateRoom;		count += sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_NotifyCreateRoom;		count += sizeof(ushort);
 	*(UINT*)(buffer + count) = pRoom->GetId();			count += sizeof(UINT);
 	const wchar_t* title = pRoom->GetRoomTitle();
 	memcpy(buffer + count, title, wcslen(title) * 2);			count += (ushort)wcslen(title) * 2;
@@ -159,12 +161,13 @@ void PacketHandler::C_CreateRoom(Session* _pSession, char* _packet)
 	for (int i = 0; i < size; i++)
 	{
 		eSessionState eState = vecSession[i]->GetSessionState();
-		if (eState != eSessionState::Lobby && eState != eSessionState::WatingRoom) continue;
+		if (vecSession[i]->GetSocket() == clientSocket) continue;
+		if (eState != eSessionState::Lobby) continue;
 		send(vecSession[i]->GetSocket(), buffer, count, 0);
 	}
 
 	count = sizeof(ushort);
-	*(ushort*)(buffer + count) = (ushort)ePacketType::S_JoinRoom;		count += sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_CreateRoom;		count += sizeof(ushort);
 	*(ushort*)buffer = count;
 	send(clientSocket, buffer, count, 0);
 }
@@ -184,16 +187,82 @@ void PacketHandler::C_Chat(Session* _pSession, char* _packet)
 	*(wchar_t*)(_packet + packetSize + count) = L'\0';													count += 2;
 	*(ushort*)_packet = packetSize + count;
 
-	SessionManager::GetInst()->SendAll(_packet);
+	SessionManager::GetInst()->SendAll(_packet, eSessionState::Lobby);
 }
 
 void PacketHandler::C_JoinRoom(Session* _pSession, char* _packet)
 {
-	ushort socket = *(ushort*)_packet;					_packet += sizeof(ushort);
+	SOCKET clientSocket = _pSession->GetSocket();
 	unsigned int roomId = *(unsigned int*)_packet;
+	char buffer[255];
+	ushort count = sizeof(ushort);
 
 	Room* pRoom = RoomManager::GetInst()->FindRoom(roomId);
-	//UserManager::GetInst()->
-	//pRoom->AddUser()
+	//*(ushort*)(buffer + count) = (ushort)ePacketType::S_JoinRoomFail;		count += sizeof(ushort);
+	//*(ushort*)buffer = count;
+	
+	if (pRoom->GetUserCount() >= 4)
+	{
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_JoinRoomFail;		count += sizeof(ushort);
+		*(ushort*)buffer = count;
+		send(clientSocket, buffer, count, 0);
+	}
+	else
+	{
+		Session* pSession = SessionManager::GetInst()->FindSession(clientSocket);
+		pSession->ChangeSessionState(eSessionState::WatingRoom);
+		User* pUser = pSession->GetUser();
+		pRoom->AddUser(pUser);
 
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_JoinRoom;		count += sizeof(ushort);
+		unsigned int userCount = pRoom->GetUserCount();
+		*(ushort*)(buffer + count) = (ushort)userCount;						count += sizeof(ushort);
+		const std::array<tMember, 4>& userList = pRoom->GetUserList();
+		const wchar_t* nickname = nullptr;
+		for (int i=0; i<userCount; i++)
+		{
+			if (userList[i].pUser == nullptr) continue;
+			*(ushort*)(buffer + count) = (ushort)i + 1;								count += sizeof(ushort);
+			*(ushort*)(buffer + count) = (ushort)userList[i]._eType;						count += sizeof(ushort);
+			nickname = userList[i].pUser->GetNickname();
+			memcpy(buffer + count, nickname, wcslen(nickname) * 2);				count += (ushort)wcslen(nickname) * 2;
+			*(wchar_t*)(buffer + count) = L'\0';													count += 2;
+		}
+		*(ushort*)buffer = count;
+		send(clientSocket, buffer, count, 0);
+
+		// S_NotifyJoinedUser
+		ushort count = sizeof(ushort);
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_NotifyJoinedUser;		count += sizeof(ushort);
+		for (int i = 0; i < userCount; i++)
+		{
+			if (userList[i].pUser == pUser)
+			{
+				*(ushort*)(buffer + count) = (ushort)i + 1;								count += sizeof(ushort);
+				*(ushort*)(buffer + count) = (ushort)userList[i]._eType;						count += sizeof(ushort);
+				nickname = userList[i].pUser->GetNickname();
+				memcpy(buffer + count, nickname, wcslen(nickname) * 2);				count += (ushort)wcslen(nickname) * 2;
+				*(wchar_t*)(buffer + count) = L'\0';
+				*(ushort*)buffer = count;													count += 2;
+				break;
+			}
+		}
+		SessionManager::GetInst()->SendAll(buffer, eSessionState::WatingRoom, clientSocket);
+	}
+}
+
+void PacketHandler::C_LeaveRoom(Session* _pSession, char* _packet)
+{
+	Room* pRoom = _pSession->GetRoom();
+	if (pRoom->GetUserCount() <= 1)
+	{
+		RoomManager::GetInst()->DeleteRoom(pRoom->GetId());
+	}
+	else
+	{
+		pRoom->LeaveUser(_pSession->GetUser());
+	}
+
+	_pSession->SetRoom(nullptr);
+	_pSession->ChangeSessionState(eSessionState::Lobby);
 }

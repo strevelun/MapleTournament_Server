@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <map>
 
 class Room;
 
@@ -11,7 +11,7 @@ private:
 
 	static unsigned int m_roomId;
 
-	std::vector<Room*> m_vecRoom;
+	std::map<unsigned int, Room*> m_mapRoom;
 
 	RoomManager();
 	~RoomManager();
@@ -33,7 +33,8 @@ public:
 
 	Room* CreateRoom(wchar_t* _strTitle);
 	Room* FindRoom(unsigned int _roomId);
+	bool DeleteRoom(unsigned int _roomId);
 
-	const std::vector<Room*>& GetRoomList() const { return m_vecRoom; }
+	const std::map<unsigned int, Room*>& GetRoomList() const { return m_mapRoom; }
 };
 

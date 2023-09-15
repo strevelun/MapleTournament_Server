@@ -31,6 +31,6 @@ public:
 	}
 
 	User* CreateUser(wchar_t* _nickname);
-	User* FindUser(wchar_t* _nickname);
+	User* FindUser(const wchar_t* _nickname);
 };
 

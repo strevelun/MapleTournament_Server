@@ -1,7 +1,6 @@
 #include "SessionManager.h"
 #include "UserManager.h"
 #include "../Network/Session.h"
-#include "../Setting.h"
 #include "../Network/User.h"
 
 SessionManager* SessionManager::m_inst = nullptr;
@@ -59,12 +58,13 @@ bool SessionManager::RemoveSession(SOCKET _socket)
 	return false;
 }
 
-void SessionManager::SendAll(char* _pBuffer, SOCKET _exceptSocket)
+void SessionManager::SendAll(char* _pBuffer, eSessionState _eSessionState, SOCKET _exceptSocket)
 {
+	int len = (int)*(unsigned short*)_pBuffer;
 	for (auto& session : m_vecSession)
 	{
 		if (session->GetSocket() == _exceptSocket) continue;
-		int len = (int)*(unsigned short*)_pBuffer;
+		if (session->GetSessionState() != _eSessionState) continue;
 		send(session->GetSocket(), _pBuffer, len, 0);
 	}
 }

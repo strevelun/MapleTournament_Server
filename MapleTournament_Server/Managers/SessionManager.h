@@ -4,6 +4,8 @@
 #include <winsock2.h>
 #include <string>
 
+#include "../Setting.h"
+
 class Session;
 
 class SessionManager
@@ -39,6 +41,6 @@ public:
 
 	const std::vector<Session*>& GetVecSession() const { return m_vecSession; }
 
-	void SendAll(char* _pBuffer, SOCKET _exceptSocket = (SOCKET)0);
+	void SendAll(char* _pBuffer, eSessionState _eSessionState, SOCKET _exceptSocket = (SOCKET)0);
 };
 

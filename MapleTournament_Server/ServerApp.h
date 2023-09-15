@@ -17,8 +17,5 @@ public:
 
     bool Init(const char* _ip, int _port);
     void Run();
-
-private:
-    void ReceivePacket(Session* _pSession);
 };
 

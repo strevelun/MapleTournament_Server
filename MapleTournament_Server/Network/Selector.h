@@ -51,13 +51,11 @@ class Selector
 	fd_set_ex			m_fdUser;
 	SOCKET				m_hSocketServer;
 
-	std::vector<Session*> m_vecClientSocket;
-
 public:
 	Selector(SOCKET _hSocketServer);
 	~Selector();
 
-	const std::vector<Session*>& Select();
+    void Select();
 
 	const fd_set_ex& GetFDUser() const { return m_fdUser; }
 

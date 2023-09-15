@@ -9,15 +9,7 @@
 #include "../Setting.h"
 
 class User;
-
-enum class eSessionState
-{
-	None,
-	Login,
-	Lobby,
-	WatingRoom,
-	InGame
-};
+class Room;
 
 typedef struct _unpPacket
 {
@@ -30,6 +22,7 @@ class Session
 private:
 	eSessionState m_eState = eSessionState::Login;
 	User* m_pUser = nullptr;
+	Room* m_pRoom = nullptr;
 	SOCKET			m_socket;
 
 	UnpPacket m_unpPacket = {};
@@ -44,8 +37,10 @@ public:
 	eSessionState GetSessionState() const { return m_eState; }
 	SOCKET GetSocket() const { return m_socket; }
 	User* GetUser() const { return m_pUser; }
+	Room* GetRoom() const { return m_pRoom; }
 
 	void SetUser(User* _pUser) { m_pUser = _pUser; }
+	void SetRoom(Room* _pRoom) { m_pRoom = _pRoom; }
 
 	void ProcessPacket(ePacketType _eType, char* _pPacket);
 
