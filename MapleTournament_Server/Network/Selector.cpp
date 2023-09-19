@@ -8,6 +8,7 @@ Selector::Selector(SOCKET _hSocketServer)
 	: m_hSocketServer(_hSocketServer)
 {
 	FD_ZERO(&m_fdReads);
+	FD_ZERO(&m_fdUser);
 	FD_SET_EX(m_hSocketServer, &m_fdUser, nullptr);
 }
 
@@ -18,6 +19,9 @@ Selector::~Selector()
 void Selector::Select()
 {
 	SOCKET clientSocket;
+	int					recvSize, totalSize = 0;
+	u_short				packetSize = 0;
+	char				recvBuffer[255];
 
 	m_fdReads = m_fdUser;
 	int	iRet = select(0, &m_fdReads, 0, 0, 0);
@@ -42,10 +46,6 @@ void Selector::Select()
 			else
 			{
 				Session* pSession = m_fdUser.fd_array_session[i];
-				int					recvSize, totalSize = 0;
-				u_short				packetSize = 0;
-				char				recvBuffer[255];
-				SOCKET				clientSocket = pSession->GetSocket();
 
 				pSession->LoadUnprocessedPacket(recvBuffer, totalSize);
 
@@ -69,7 +69,8 @@ void Selector::Select()
 				}
 
 				totalSize += recvSize;
-
+				char* temp;
+				u_short type;
 				while (totalSize >= sizeof(u_short))
 				{
 					packetSize = *(u_short*)recvBuffer;
@@ -79,8 +80,8 @@ void Selector::Select()
 						break;
 					}
 
-					char* temp = recvBuffer;								temp += sizeof(u_short);
-					u_short type = *(u_short*)temp;							temp += sizeof(u_short);
+					temp = recvBuffer;									temp += sizeof(u_short);
+					type = *(u_short*)temp;							//temp += sizeof(u_short);
 
 					pSession->ProcessPacket((ePacketType)type, temp);
 

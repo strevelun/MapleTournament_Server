@@ -5,6 +5,9 @@ Room::Room(unsigned int _id, wchar_t* _strTitle)
 	: m_id(_id)
 {
 	wcsncpy_s(m_strTitle, sizeof(m_strTitle) / sizeof(wchar_t), _strTitle, sizeof(m_strTitle) / sizeof(wchar_t) - 1);
+	size_t size = m_arrSession.size();
+	for (int i = 0; i < size; i++)
+		m_arrSession[i].slotNumber = i;
 }
 
 Room::~Room()
@@ -12,19 +15,19 @@ Room::~Room()
 	
 }
 
-void Room::AddUser(User* _pUser, eMemberType _eType)
+void Room::AddSession(Session* _pSession, eMemberType _eType)
 {
-	if (GetUserCount() >= 4) return;
+	if (m_sessionCount >= 4) return;
 
-	unsigned int size = m_arrUser.size();
+	unsigned int size = m_arrSession.size();
 	for (int i = 0; i < size; i++)
 	{
-		if (m_arrUser[i].pUser == nullptr)
+		if (m_arrSession[i].pSession == nullptr)
 		{
-			m_arrUser[i].pUser = _pUser;
-			m_arrUser[i]._eType = _eType;
-			m_arrUser[i]._eState = _eType == eMemberType::Owner ? eMemberState::Ready : eMemberState::Wait;
-			m_userCount++;
+			m_arrSession[i].pSession = _pSession;
+			m_arrSession[i]._eType = _eType;
+			m_arrSession[i]._eState = _eType == eMemberType::Owner ? eMemberState::Ready : eMemberState::Wait;
+			m_sessionCount++;
 			return;
 		}
 	}
@@ -32,17 +35,17 @@ void Room::AddUser(User* _pUser, eMemberType _eType)
 
 // 자신이 방장인지 체크
 // 방장이면 다른사람이 방장
-void Room::LeaveUser(User* _pUser)
+void Room::LeaveSession(Session* _pSession)
 {
-	unsigned int size = m_arrUser.size();
+	unsigned int size = m_arrSession.size();
 	for (int i = 0; i < size; i++)
 	{
-		if (m_arrUser[i].pUser == _pUser)
+		if (m_arrSession[i].pSession == _pSession)
 		{
-			m_arrUser[i].pUser = nullptr;
-			m_arrUser[i]._eType = eMemberType::None;
-			m_arrUser[i]._eState = eMemberState::None;
-			m_userCount--;
+			m_arrSession[i].pSession = nullptr;
+			m_arrSession[i]._eType = eMemberType::None;
+			m_arrSession[i]._eState = eMemberState::None;
+			m_sessionCount--;
 			return;
 		}
 	}
@@ -60,12 +63,34 @@ unsigned int Room::GetUserCount() const
 	return count;
 }
 */
-User* Room::GetRoomOwner() const
+Session* Room::GetRoomOwner() const
 {
-	unsigned int size = m_arrUser.size();
+	unsigned int size = m_arrSession.size();
 	for (int i = 0; i < size; i++)
 	{
-		if (m_arrUser[i]._eType == eMemberType::Owner)
-			return m_arrUser[i].pUser;
+		if (m_arrSession[i]._eType == eMemberType::Owner)
+			return m_arrSession[i].pSession;
 	}
+}
+
+const tMember* Room::GetMemberInfo(Session* _pSession)
+{
+	size_t size = m_arrSession.size();
+	for (size_t i = 0; i < size; i++)
+	{
+		if (m_arrSession[i].pSession == _pSession)
+			return &m_arrSession[i];
+	}
+	return nullptr;
+}
+
+bool Room::IsRoomReady()
+{
+	size_t size = m_arrSession.size();
+	for (size_t i = 0; i < size; i++)
+	{
+		if (m_arrSession[i]._eState == eMemberState::Wait)
+				return false;
+	}
+	return true;
 }

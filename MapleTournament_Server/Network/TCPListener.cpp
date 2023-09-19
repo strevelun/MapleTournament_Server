@@ -12,7 +12,7 @@ TCPListener::TCPListener(const char* _ip, unsigned short _port)
 	inet_pton(AF_INET, _ip, &m_servAddr.sin_addr);
 	m_servAddr.sin_port = htons(_port);
 }
-
+ 
 TCPListener::~TCPListener()
 {
 	if (m_socket) closesocket(m_socket);

@@ -2,7 +2,7 @@
 
 #include <array>
 
-class User;
+class Session;
 
 enum class eRoomState
 {
@@ -27,9 +27,10 @@ enum class eMemberState
 
 typedef struct _tMember
 {
-	User* pUser = nullptr; // TODO : Change to SOCKET
+	Session* pSession = nullptr; 
 	eMemberType _eType = eMemberType::None;
 	eMemberState _eState = eMemberState::None;
+	int slotNumber = 0;
 } tMember;
 
 class Room
@@ -37,21 +38,24 @@ class Room
 	unsigned int m_id;
 	eRoomState m_eState = eRoomState::Ready;
 	wchar_t m_strTitle[20];
-	std::array<_tMember, 4>		 m_arrUser;
-	unsigned int m_userCount = 0;
+	std::array<tMember, 4>		 m_arrSession; // TODO : Player
+	unsigned int m_sessionCount = 0;
 
 public:
 	Room(unsigned int _id, wchar_t* _strTitle);
 	~Room();
 
-	void AddUser(User* _pUser, eMemberType _eType = eMemberType::Member);
-	void LeaveUser(User* _pUser);
+	void AddSession(Session* _pSession, eMemberType _eType = eMemberType::Member);
+	void LeaveSession(Session* _pSession);
 
 	unsigned int GetId() const { return m_id; }
 	eRoomState GetRoomState() const { return m_eState; }
 	const wchar_t* GetRoomTitle() const { return m_strTitle; }
-	unsigned int GetUserCount() const { return m_userCount; }
-	User* GetRoomOwner() const;
-	const std::array<_tMember, 4>& GetUserList() const { return m_arrUser; }
+	unsigned int GetSessionCount() const { return m_sessionCount; }
+	Session* GetRoomOwner() const;
+	const std::array<tMember, 4>& GetMemberList() const { return m_arrSession; }
+	const tMember* GetMemberInfo(Session* _pSession);
+
+	bool IsRoomReady();
 };
 

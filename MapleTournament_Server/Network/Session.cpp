@@ -9,7 +9,9 @@ std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallb
 	{ ePacketType::C_Exit, PacketHandler::C_Exit },
 	{ ePacketType::C_CreateRoom, PacketHandler::C_CreateRoom },
 	{ ePacketType::C_Chat, PacketHandler::C_Chat },
-	{ ePacketType::C_JoinRoom, PacketHandler::C_JoinRoom }
+	{ ePacketType::C_JoinRoom, PacketHandler::C_JoinRoom },
+	{ ePacketType::C_LeaveRoom, PacketHandler::C_LeaveRoom },
+	{ ePacketType::C_CheckRoomReady, PacketHandler::C_CheckRoomReady }
 };
 
 Session::Session(SOCKET _socket) :

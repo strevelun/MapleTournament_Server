@@ -23,7 +23,11 @@ enum class ePacketType
 	S_JoinRoom,
 	S_JoinRoomFail,
 	C_LeaveRoom,
-	S_NotifyJoinedUser
+	S_LeaveRoom,
+	S_NotifyJoinedUser,
+	C_CheckRoomReady,
+	S_CheckRoomReadyOK,
+	S_CheckRoomReadyFail,
 };
 
 enum class eSessionState
