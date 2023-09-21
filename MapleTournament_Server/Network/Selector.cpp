@@ -56,9 +56,12 @@ void Selector::Select()
 					u_short count = sizeof(u_short);
 					*(u_short*)(buffer + count) = (u_short)ePacketType::S_Exit;		count += sizeof(u_short);
 					User* pUser = pSession->GetUser();
-					const wchar_t* str = pUser->GetNickname();
-					memcpy(buffer + count, str, wcslen(str) * 2);			                    count += (u_short)wcslen(str) * 2;
-					*(wchar_t*)(buffer + count) = L'\0';								        count += 2;
+					if (pUser)
+					{
+						const wchar_t* str = pUser->GetNickname();
+						memcpy(buffer + count, str, wcslen(str) * 2);			                    count += (u_short)wcslen(str) * 2;
+						*(wchar_t*)(buffer + count) = L'\0';								        count += 2;
+					}
 					*(u_short*)buffer = count;
 					SessionManager::GetInst()->SendAll(buffer, eSessionState::Lobby);
 
@@ -81,7 +84,7 @@ void Selector::Select()
 					}
 
 					temp = recvBuffer;									temp += sizeof(u_short);
-					type = *(u_short*)temp;							//temp += sizeof(u_short);
+					type = *(u_short*)temp;								temp += sizeof(u_short);
 
 					pSession->ProcessPacket((ePacketType)type, temp);
 

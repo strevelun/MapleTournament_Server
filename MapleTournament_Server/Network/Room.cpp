@@ -1,5 +1,6 @@
 #include "Room.h"
 #include "User.h"
+#include "Session.h"
 
 Room::Room(unsigned int _id, wchar_t* _strTitle)
 	: m_id(_id)
@@ -38,15 +39,29 @@ void Room::AddSession(Session* _pSession, eMemberType _eType)
 void Room::LeaveSession(Session* _pSession)
 {
 	unsigned int size = m_arrSession.size();
-	for (int i = 0; i < size; i++)
+	int i = 0;
+	bool isOwner = false;
+	for (; i < size; i++)
 	{
 		if (m_arrSession[i].pSession == _pSession)
 		{
+			if(m_arrSession[i]._eType == eMemberType::Owner) 
+				isOwner = true;
 			m_arrSession[i].pSession = nullptr;
 			m_arrSession[i]._eType = eMemberType::None;
 			m_arrSession[i]._eState = eMemberState::None;
 			m_sessionCount--;
-			return;
+			break;
+		}
+	}
+
+	if (isOwner)
+	{
+		for (i = 0; i < size; i++)
+		{
+			if (m_arrSession[i].pSession == nullptr) continue;
+			m_arrSession[i]._eType = eMemberType::Owner;
+			break;
 		}
 	}
 }
@@ -63,14 +78,15 @@ unsigned int Room::GetUserCount() const
 	return count;
 }
 */
-Session* Room::GetRoomOwner() const
+const tMember* Room::GetRoomOwner() const
 {
 	unsigned int size = m_arrSession.size();
 	for (int i = 0; i < size; i++)
 	{
 		if (m_arrSession[i]._eType == eMemberType::Owner)
-			return m_arrSession[i].pSession;
+			return &m_arrSession[i];
 	}
+	return nullptr;
 }
 
 const tMember* Room::GetMemberInfo(Session* _pSession)
@@ -87,10 +103,21 @@ const tMember* Room::GetMemberInfo(Session* _pSession)
 bool Room::IsRoomReady()
 {
 	size_t size = m_arrSession.size();
+	if (m_sessionCount <= 1) return false;
 	for (size_t i = 0; i < size; i++)
 	{
 		if (m_arrSession[i]._eState == eMemberState::Wait)
 				return false;
 	}
 	return true;
+}
+
+void Room::SendAll(char* _buffer)
+{
+	size_t size = m_arrSession.size();
+	for (int i = 0; i < size; i++)
+	{
+		if (m_arrSession[i].pSession == nullptr) continue;
+		send(m_arrSession[i].pSession->GetSocket(), _buffer, *(u_short*)_buffer, 0);
+	}
 }

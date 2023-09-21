@@ -66,8 +66,8 @@ void PacketHandler::C_EnterLobby(Session* _pSession, char* _packet)
 			const wchar_t* title = room.second->GetRoomTitle();
 			memcpy(buffer + count, title, wcslen(title) * 2);			count += (ushort)wcslen(title) * 2;
 			*(wchar_t*)(buffer + count) = L'\0';									count += 2;
-			pSession = room.second->GetRoomOwner();
-			pUser = pSession->GetUser();
+			const tMember* member = room.second->GetRoomOwner();
+			pUser = member->pSession->GetUser();
 			pOwnerNickname = pUser->GetNickname();
 			memcpy(buffer + count, pOwnerNickname, wcslen(pOwnerNickname) * 2);			count += (ushort)wcslen(pOwnerNickname) * 2;
 			*(wchar_t*)(buffer + count) = L'\0';									count += 2;
@@ -76,13 +76,6 @@ void PacketHandler::C_EnterLobby(Session* _pSession, char* _packet)
 		*(wchar_t*)buffer = count;
 		send(clientSocket, buffer, count, 0);
 	}
-
-	count = sizeof(ushort);
-	*(ushort*)(buffer + count) = (ushort)ePacketType::S_EnterOtherUser;		count += sizeof(ushort);
-	memcpy(buffer + count, nickname, wcslen(nickname) * 2);				count += (ushort)wcslen(nickname) * 2;
-	*(wchar_t*)(buffer + count) = L'\0';								count += 2;
-	*(ushort*)buffer = count;
-	SessionManager::GetInst()->SendAll(buffer, eSessionState::Lobby, clientSocket);
 }
 
 void PacketHandler::C_OKLogin(Session* _pSession, char* _packet)
@@ -124,6 +117,13 @@ void PacketHandler::C_OKLogin(Session* _pSession, char* _packet)
 		Session* pSession = SessionManager::GetInst()->FindSession(clientSocket);
 		pSession->ChangeSessionState(eSessionState::Lobby);
 		pSession->SetUser(pUser);
+
+		count = sizeof(ushort);
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_EnterOtherUser;		count += sizeof(ushort);
+		memcpy(buffer + count, nickname, wcslen(nickname) * 2);				count += (ushort)wcslen(nickname) * 2;
+		*(wchar_t*)(buffer + count) = L'\0';								count += 2;
+		*(ushort*)buffer = count;
+		SessionManager::GetInst()->SendAll(buffer, eSessionState::Lobby, clientSocket);
 	}
 	else // 닉네임은 이미 존재한 경우
 	{
@@ -255,25 +255,35 @@ void PacketHandler::C_JoinRoom(Session* _pSession, char* _packet)
 		*(ushort*)(buffer + count) = (ushort)info->_eType;				count += sizeof(ushort);
 		nickname = info->pSession->GetUser()->GetNickname();
 		memcpy(buffer + count, nickname, wcslen(nickname) * 2);					count += (ushort)wcslen(nickname) * 2;
-		*(wchar_t*)(buffer + count) = L'\0';
-		*(ushort*)buffer = count;												count += 2;
+		*(wchar_t*)(buffer + count) = L'\0';								count += 2;
+		*(ushort*)buffer = count;												
 		
 		for (int i = 0; i < size; i++)
 		{
+			if (userList[i].pSession == nullptr) continue;
 			if (userList[i].pSession == _pSession) continue;
 			send(userList[i].pSession->GetSocket(), buffer, count, 0);
 		}
+
+		count = sizeof(ushort);
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateLobbyRoomMemberCount;		count += sizeof(ushort);
+		*(unsigned int*)(buffer + count) = roomId;				count += sizeof(unsigned int);
+		*(char*)(buffer + count) = (char)pRoom->GetSessionCount();			count += sizeof(char);
+		*(ushort*)buffer = count;
+		SessionManager::GetInst()->SendAll(buffer, eSessionState::Lobby);
 	}
 }
 
 void PacketHandler::C_LeaveRoom(Session* _pSession, char* _packet)
 {
+	
 	char buffer[255];
 	ushort count = sizeof(ushort);
 	Room* pRoom = _pSession->GetRoom();
+	const tMember* pMember = pRoom->GetMemberInfo(_pSession);
+	unsigned int roomId = pRoom->GetId();
 	if (pRoom->GetSessionCount() <= 1)
 	{
-		unsigned int roomId = pRoom->GetId();
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_LeaveRoom;				count += sizeof(ushort);
 		*(unsigned int*)(buffer + count) = roomId;				count += sizeof(unsigned int);
 		*(ushort*)buffer = count;
@@ -284,6 +294,26 @@ void PacketHandler::C_LeaveRoom(Session* _pSession, char* _packet)
 	else
 	{
 		pRoom->LeaveSession(_pSession);
+		const tMember* pNewOwner = pRoom->GetRoomOwner();
+
+		count = sizeof(ushort);
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateRoomMemberLeave;				count += sizeof(ushort);
+		*(char*)(buffer + count) = pMember->slotNumber;				count += sizeof(char); // 누가 나갔는지
+		*(char*)(buffer + count) = pNewOwner->slotNumber;				count += sizeof(char); // 누가 새로운 owner인지
+		*(ushort*)buffer = count;
+		pRoom->SendAll(buffer);
+
+		// 방장 / 인원수
+		count = sizeof(ushort);
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateLobbyRoomList;				count += sizeof(ushort);
+		*(unsigned int*)(buffer + count) = roomId;				count += sizeof(unsigned int);
+		User* pUser = pNewOwner->pSession->GetUser();
+		const wchar_t* nickname = pUser->GetNickname();
+		memcpy(buffer + count, nickname, wcslen(nickname) * 2);				count += (ushort)wcslen(nickname) * 2;
+		*(wchar_t*)(buffer + count) = L'\0';								count += 2;
+		*(char*)(buffer + count) = (char)pRoom->GetSessionCount();			count += sizeof(char);
+		*(ushort*)buffer = count;
+		SessionManager::GetInst()->SendAll(buffer, eSessionState::Lobby);
 	}
 
 	_pSession->SetRoom(nullptr);
@@ -308,5 +338,6 @@ void PacketHandler::C_CheckRoomReady(Session* _pSession, char* _packet)
 
 	count += sizeof(ushort);
 	*(ushort*)buffer = count;
-	SessionManager::GetInst()->SendAll(buffer, eSessionState::WatingRoom);
+
+	pRoom->SendAll(buffer);
 }

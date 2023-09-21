@@ -52,10 +52,11 @@ public:
 	eRoomState GetRoomState() const { return m_eState; }
 	const wchar_t* GetRoomTitle() const { return m_strTitle; }
 	unsigned int GetSessionCount() const { return m_sessionCount; }
-	Session* GetRoomOwner() const;
+	const tMember* GetRoomOwner() const;
 	const std::array<tMember, 4>& GetMemberList() const { return m_arrSession; }
 	const tMember* GetMemberInfo(Session* _pSession);
 
 	bool IsRoomReady();
+	void SendAll(char* _buffer);
 };
 
