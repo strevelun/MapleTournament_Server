@@ -56,6 +56,9 @@ public:
 	const std::array<tMember, 4>& GetMemberList() const { return m_arrSession; }
 	const tMember* GetMemberInfo(Session* _pSession);
 
+	void SetRoomState(eRoomState _state);
+	void SetMemberState(Session* _pSession, eMemberState _state);
+
 	bool IsRoomReady();
 	void SendAll(char* _buffer);
 };

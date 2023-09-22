@@ -11,7 +11,8 @@ std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallb
 	{ ePacketType::C_Chat, PacketHandler::C_Chat },
 	{ ePacketType::C_JoinRoom, PacketHandler::C_JoinRoom },
 	{ ePacketType::C_LeaveRoom, PacketHandler::C_LeaveRoom },
-	{ ePacketType::C_CheckRoomReady, PacketHandler::C_CheckRoomReady }
+	{ ePacketType::C_CheckRoomReady, PacketHandler::C_CheckRoomReady },
+	{ ePacketType::C_UserRoomReady, PacketHandler::C_UserRoomReady }
 };
 
 Session::Session(SOCKET _socket) :

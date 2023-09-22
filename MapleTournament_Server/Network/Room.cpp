@@ -100,6 +100,24 @@ const tMember* Room::GetMemberInfo(Session* _pSession)
 	return nullptr;
 }
 
+void Room::SetRoomState(eRoomState _state)
+{
+	m_eState = _state;
+}
+
+void Room::SetMemberState(Session* _pSession, eMemberState _state)
+{
+	size_t size = m_arrSession.size();
+	for (size_t i = 0; i < size; i++)
+	{
+		if (m_arrSession[i].pSession == _pSession)
+		{
+			m_arrSession[i]._eState = _state;
+			break;
+		}
+	}
+}
+
 bool Room::IsRoomReady()
 {
 	size_t size = m_arrSession.size();

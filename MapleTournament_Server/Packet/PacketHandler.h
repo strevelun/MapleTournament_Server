@@ -13,5 +13,6 @@ public:
 	static void C_JoinRoom(Session* _pSession, char* _packet);
 	static void C_LeaveRoom(Session* _pSession, char* _packet);
 	static void C_CheckRoomReady(Session* _pSession, char* _packet);
+	static void C_UserRoomReady(Session* _pSession, char* _packet);
 };
 
