@@ -4,7 +4,6 @@
 #include <WinSock2.h>
 
 std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallback = {
-	{ ePacketType::C_EnterLobby, PacketHandler::C_EnterLobby },
 	{ ePacketType::C_OKLogin, PacketHandler::C_OKLogin },
 	{ ePacketType::C_Exit, PacketHandler::C_Exit },
 	{ ePacketType::C_CreateRoom, PacketHandler::C_CreateRoom },
@@ -15,6 +14,7 @@ std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallb
 	{ ePacketType::C_UserRoomReady, PacketHandler::C_UserRoomReady },
 	{ ePacketType::C_InGameReady, PacketHandler::C_InGameReady },
 	{ ePacketType::C_UpdateUserListPage, PacketHandler::C_UpdateUserListPage },
+	{ ePacketType::C_UpdateRoomListPage, PacketHandler::C_UpdateRoomListPage },
 };
 
 Session::Session(SOCKET _socket) :

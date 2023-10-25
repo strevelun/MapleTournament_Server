@@ -52,19 +52,6 @@ void Selector::Select()
 				recvSize = recv(clientSocket, recvBuffer + totalSize, sizeof(recvBuffer) - totalSize, 0);
 				if (recvSize == SOCKET_ERROR)
 				{
-					char buffer[255];
-					u_short count = sizeof(u_short);
-					*(u_short*)(buffer + count) = (u_short)ePacketType::S_Exit;		count += sizeof(u_short);
-					User* pUser = pSession->GetUser();
-					if (pUser)
-					{
-						const wchar_t* str = pUser->GetNickname();
-						memcpy(buffer + count, str, wcslen(str) * 2);			                    count += (u_short)wcslen(str) * 2;
-						*(wchar_t*)(buffer + count) = L'\0';								        count += 2;
-					}
-					*(u_short*)buffer = count;
-					SessionManager::GetInst()->SendAll(buffer, eSessionState::Lobby);
-
 					RemoveSocket(clientSocket);
 					SessionManager::GetInst()->RemoveSession(clientSocket);
 					closesocket(clientSocket);

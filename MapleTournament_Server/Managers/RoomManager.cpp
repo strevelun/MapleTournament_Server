@@ -26,8 +26,6 @@ Room* RoomManager::FindRoom(unsigned int _roomId)
 {
 	std::map<unsigned int, Room*>::iterator iter = m_mapRoom.find(_roomId);
 	if (iter != m_mapRoom.end())	return iter->second;
-	
-
 
 	return nullptr;
 }
