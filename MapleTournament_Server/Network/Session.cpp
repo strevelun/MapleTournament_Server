@@ -12,7 +12,9 @@ std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallb
 	{ ePacketType::C_JoinRoom, PacketHandler::C_JoinRoom },
 	{ ePacketType::C_LeaveRoom, PacketHandler::C_LeaveRoom },
 	{ ePacketType::C_CheckRoomReady, PacketHandler::C_CheckRoomReady },
-	{ ePacketType::C_UserRoomReady, PacketHandler::C_UserRoomReady }
+	{ ePacketType::C_UserRoomReady, PacketHandler::C_UserRoomReady },
+	{ ePacketType::C_InGameReady, PacketHandler::C_InGameReady },
+	{ ePacketType::C_UpdateUserListPage, PacketHandler::C_UpdateUserListPage },
 };
 
 Session::Session(SOCKET _socket) :

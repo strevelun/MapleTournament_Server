@@ -13,7 +13,7 @@ class SessionManager
 private:
 	static SessionManager* m_inst;
 
-	std::vector<Session*> m_vecSession;
+	std::vector<Session*> m_vecSession; // std::array
 
 	SessionManager();
 	~SessionManager();

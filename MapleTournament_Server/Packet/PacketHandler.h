@@ -14,5 +14,7 @@ public:
 	static void C_LeaveRoom(Session* _pSession, char* _packet);
 	static void C_CheckRoomReady(Session* _pSession, char* _packet);
 	static void C_UserRoomReady(Session* _pSession, char* _packet);
+	static void C_InGameReady(Session* _pSession, char* _packet);
+	static void C_UpdateUserListPage(Session* _pSession, char* _packet);
 };
 

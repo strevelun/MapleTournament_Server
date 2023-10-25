@@ -35,6 +35,10 @@ enum class ePacketType
 	S_UpdateUserState,
 	S_UpdateWaitingRoomBtn,
 	S_UpdateUserType,
+	C_InGameReady,
+	S_InGameReady,
+	C_UpdateUserListPage,
+	S_UpdateUserListPage,
 };
 
 enum class eSessionState

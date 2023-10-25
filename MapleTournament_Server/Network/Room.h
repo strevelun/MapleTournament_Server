@@ -38,8 +38,8 @@ class Room
 	unsigned int m_id;
 	eRoomState m_eState = eRoomState::Ready;
 	wchar_t m_strTitle[20];
-	std::array<tMember, 4>		 m_arrSession; // TODO : Player
-	unsigned int m_sessionCount = 0;
+	std::array<tMember, 4>		 m_arrMember; // TODO : Player
+	unsigned int m_memberCount = 0;
 
 public:
 	Room(unsigned int _id, wchar_t* _strTitle);
@@ -51,9 +51,9 @@ public:
 	unsigned int GetId() const { return m_id; }
 	eRoomState GetRoomState() const { return m_eState; }
 	const wchar_t* GetRoomTitle() const { return m_strTitle; }
-	unsigned int GetSessionCount() const { return m_sessionCount; }
+	unsigned int GetMemberCount() const { return m_memberCount; }
 	const tMember* GetRoomOwner() const;
-	const std::array<tMember, 4>& GetMemberList() const { return m_arrSession; }
+	const std::array<tMember, 4>& GetMemberList() const { return m_arrMember; }
 	const tMember* GetMemberInfo(Session* _pSession);
 
 	void SetRoomState(eRoomState _state);

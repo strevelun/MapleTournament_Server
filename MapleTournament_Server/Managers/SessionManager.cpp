@@ -27,6 +27,8 @@ bool SessionManager::Init()
 
 bool SessionManager::AddSession(Session* _pSession)
 {
+	if (m_vecSession.size() >= 64) return false;
+
 	m_vecSession.push_back(_pSession);
 	return true;
 }
