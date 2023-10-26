@@ -338,7 +338,10 @@ void PacketHandler::C_UpdateRoomListPage(Session* _pSession, char* _packet)
 	int minCount = newPage * 10;
 	int maxCount = (newPage + 1) * 10;
 
-	char buffer[255];
+	// 현재 페이지를 보여주려면 최소 minCount가 존재해야 함
+	if (roomListSize <= minCount) return;
+
+	char buffer[1000];
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateRoomListPage;			count += sizeof(ushort);
 	*(char*)(buffer + count) = (char)newPage;						count += sizeof(char);
