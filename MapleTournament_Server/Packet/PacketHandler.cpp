@@ -67,15 +67,46 @@ void PacketHandler::C_OKLogin(Session* _pSession, char* _packet)
 
 void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 {
+
+	// WaitingRoom에 있는 경우, 같은 방에 있는 유저에게 Update
+	if (_pSession->GetSessionState() == eSessionState::WatingRoom)
+	{
+		char buffer[255];
+		ushort count = sizeof(ushort);
+		Room* pRoom = _pSession->GetRoom();
+		const tMember* pMember = pRoom->GetMemberInfo(_pSession);
+		unsigned int roomId = pRoom->GetId();
+		if (pRoom->GetMemberCount() <= 1)
+		{
+			RoomManager::GetInst()->DeleteRoom(roomId);
+		}
+		else
+		{
+			pRoom->LeaveSession(_pSession);
+			const tMember* pNewOwner = pRoom->GetRoomOwner();
+			Session* newOwnerSession = pNewOwner->pSession;
+
+			count = sizeof(ushort);
+			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateRoomMemberLeave;				count += sizeof(ushort);
+			*(char*)(buffer + count) = pMember->slotNumber;				count += sizeof(char); // 누가 나갔는지
+			*(char*)(buffer + count) = pNewOwner->slotNumber;				count += sizeof(char); // 누가 새로운 owner인지
+			*(ushort*)buffer = count;
+			pRoom->SendAll(buffer);
+
+			count = sizeof(ushort);
+			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateUserType;				count += sizeof(ushort);
+			*(char*)(buffer + count) = (char)eMemberType::Owner;			count += sizeof(char);
+			*(ushort*)buffer = count;
+			send(newOwnerSession->GetSocket(), buffer, count, 0);
+		}
+	}
+
 	// Lobby or Login에 있는 경우 RemoveSession
 	SOCKET clientSocket = _pSession->GetSocket();
 	if(SessionManager::GetInst()->RemoveSession(clientSocket))
 		std::wcout << clientSocket << "로그아웃 성공!" << '\n';
 	else
 		std::wcout << clientSocket << "로그아웃 실패!" << '\n';
-
-	// WaitingRoom에 있는 경우, 같은 방에 있는 유저에게 Update
-
 
 	// S_Exit SendAll loginscene에 없을떄
 }
@@ -338,8 +369,7 @@ void PacketHandler::C_UpdateRoomListPage(Session* _pSession, char* _packet)
 	int minCount = newPage * 10;
 	int maxCount = (newPage + 1) * 10;
 
-	// 현재 페이지를 보여주려면 최소 minCount가 존재해야 함
-	if (roomListSize <= minCount) return;
+	if (numOfRoom > 0 && roomListSize <= minCount) return;
 
 	char buffer[1000];
 	ushort count = sizeof(ushort);
