@@ -59,19 +59,20 @@ void Selector::Select()
 				}
 
 				totalSize += recvSize;
-				char* temp;
-				u_short type;
-				while (totalSize >= sizeof(u_short))
+
+				while (totalSize >= 1)
 				{
 					packetSize = *(u_short*)recvBuffer;
-					if (packetSize > totalSize)
+					if (totalSize == 1 || packetSize > totalSize)
 					{
 						pSession->SaveUnprocessedPacket(recvBuffer, totalSize);
 						break;
 					}
+					if (packetSize < sizeof(u_short) + sizeof(u_short)) 
+						break;
 
-					temp = recvBuffer;									temp += sizeof(u_short);
-					type = *(u_short*)temp;								temp += sizeof(u_short);
+					char* temp = recvBuffer;									temp += sizeof(u_short);
+					u_short type = *(u_short*)temp;								temp += sizeof(u_short);
 
 					pSession->ProcessPacket((ePacketType)type, temp);
 

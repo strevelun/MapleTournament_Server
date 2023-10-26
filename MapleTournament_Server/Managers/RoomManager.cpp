@@ -38,5 +38,5 @@ bool RoomManager::DeleteRoom(unsigned int _roomId)
 	delete pRoom;
 	m_mapRoom.erase(_roomId);
 
-	return false;
+	return true;
 }

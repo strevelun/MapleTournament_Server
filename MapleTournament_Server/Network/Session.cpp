@@ -40,7 +40,12 @@ void Session::SaveUnprocessedPacket(char* _pPacket, int _totalSize)
 
 void Session::LoadUnprocessedPacket(char* _pPacket, int& _totalSize)
 {
-	if (m_unpPacket.size <= 0) return;
+	if (m_unpPacket.size <= 0)
+	{
+		_totalSize = 0;
+		return;
+	}
+
 	memcpy(_pPacket, m_unpPacket.unprocessedPacket, m_unpPacket.size);
 	_totalSize = m_unpPacket.size;
 	m_unpPacket.size = 0;

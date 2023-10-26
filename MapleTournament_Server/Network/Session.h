@@ -13,8 +13,8 @@ class Room;
 
 typedef struct _unpPacket
 {
-	char* unprocessedPacket;
-	int size;
+	char unprocessedPacket[255];
+	int size = 0;
 } UnpPacket;
 
 class Session
