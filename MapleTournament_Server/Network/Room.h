@@ -48,7 +48,7 @@ public:
 	void AddSession(Session* _pSession, eMemberType _eType = eMemberType::Member);
 	void LeaveSession(Session* _pSession);
 
-	unsigned int GetId() const { return m_id; }
+	unsigned int  GetId() const { return m_id; }
 	eRoomState GetRoomState() const { return m_eState; }
 	const wchar_t* GetRoomTitle() const { return m_strTitle; }
 	unsigned int GetMemberCount() const { return m_memberCount; }
