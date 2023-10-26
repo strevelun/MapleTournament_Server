@@ -31,6 +31,7 @@ typedef struct _tMember
 	eMemberType _eType = eMemberType::None;
 	eMemberState _eState = eMemberState::None;
 	int slotNumber = 0;
+	int characterChoice = 0;
 } tMember;
 
 class Room
@@ -58,6 +59,8 @@ public:
 
 	void SetRoomState(eRoomState _state);
 	void SetMemberState(Session* _pSession, eMemberState _state);
+
+	void SetMemberChoice(Session* _pSession, int _choice);
 
 	bool IsRoomReady();
 	void SendAll(char* _buffer);

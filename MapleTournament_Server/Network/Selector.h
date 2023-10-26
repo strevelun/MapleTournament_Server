@@ -59,6 +59,8 @@ public:
 
 	const fd_set_ex& GetFDUser() const { return m_fdUser; }
 
-	void RemoveSocket(SOCKET _socket) { FD_CLR_EX(_socket, &m_fdUser); }
+	void RemoveSocket(SOCKET _socket) {
+        FD_CLR_EX(_socket, &m_fdUser); 
+    }
 };
 

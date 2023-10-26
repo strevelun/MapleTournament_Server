@@ -16,5 +16,6 @@ public:
 	static void C_InGameReady(Session* _pSession, char* _packet);
 	static void C_UpdateUserListPage(Session* _pSession, char* _packet);
 	static void C_UpdateRoomListPage(Session* _pSession, char* _packet);
+	static void C_UpdateUserSlot(Session* _pSession, char* _packet);
 };
 

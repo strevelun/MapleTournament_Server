@@ -50,6 +50,7 @@ void Room::LeaveSession(Session* _pSession)
 			m_arrMember[i].pSession = nullptr;
 			m_arrMember[i]._eType = eMemberType::None;
 			m_arrMember[i]._eState = eMemberState::None;
+			m_arrMember[i].characterChoice = 0;
 			m_memberCount--;
 			break;
 		}
@@ -113,6 +114,19 @@ void Room::SetMemberState(Session* _pSession, eMemberState _state)
 		if (m_arrMember[i].pSession == _pSession)
 		{
 			m_arrMember[i]._eState = _state;
+			break;
+		}
+	}
+}
+
+void Room::SetMemberChoice(Session* _pSession, int _choice)
+{
+	size_t size = m_arrMember.size();
+	for (size_t i = 0; i < size; i++)
+	{
+		if (m_arrMember[i].pSession == _pSession)
+		{
+			m_arrMember[i].characterChoice = _choice;
 			break;
 		}
 	}

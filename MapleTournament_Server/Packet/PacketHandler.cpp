@@ -181,6 +181,7 @@ void PacketHandler::C_JoinRoom(Session* _pSession, char* _packet)
 		pRoom->AddSession(_pSession);
 		const wchar_t* roomTitle = pRoom->GetRoomTitle();
 
+		// 이미 방에 있는 유저들의 정보를 나한테
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_JoinRoom;			count += sizeof(ushort);
 		memcpy(buffer + count, roomTitle, wcslen(roomTitle) * 2);				count += (ushort)wcslen(roomTitle) * 2;
 		*(wchar_t*)(buffer + count) = L'\0';								count += 2;
@@ -195,6 +196,7 @@ void PacketHandler::C_JoinRoom(Session* _pSession, char* _packet)
 		{
 			if (userList[i].pSession == nullptr)				continue;
 			*(char*)(buffer + count) = (char)i;									count += sizeof(char);
+			*(char*)(buffer + count) = (char)userList[i].characterChoice;									count += sizeof(char);
 			*(ushort*)(buffer + count) = (ushort)userList[i]._eType;			count += sizeof(ushort);
 			s = userList[i].pSession;
 			user = s->GetUser();
@@ -205,17 +207,19 @@ void PacketHandler::C_JoinRoom(Session* _pSession, char* _packet)
 		*(ushort*)buffer = count;
 		send(clientSocket, buffer, count, 0);
 
-		// 방금 들어온 플레이어는 어느 슬롯에 존재하는지 
+		// 방금 들어온 플레이어의 정보를 방안 모든 유저들에게 (자기자신 제외)
 		ushort count = sizeof(ushort);
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_NotifyJoinedUser;		count += sizeof(ushort);
 		const tMember* info = pRoom->GetMemberInfo(_pSession);
 		*(char*)(buffer + count) = (char)info->slotNumber;					count += sizeof(char);
+		*(char*)(buffer + count) = (char)info->characterChoice;					count += sizeof(char);
 		*(ushort*)(buffer + count) = (ushort)info->_eType;				count += sizeof(ushort);
 		nickname = info->pSession->GetUser()->GetNickname();
 		memcpy(buffer + count, nickname, wcslen(nickname) * 2);					count += (ushort)wcslen(nickname) * 2;
 		*(wchar_t*)(buffer + count) = L'\0';								count += 2;
 		*(ushort*)buffer = count;												
 		
+		// Room::SendAll
 		for (int i = 0; i < size; i++)
 		{
 			if (userList[i].pSession == nullptr) continue;
@@ -374,7 +378,7 @@ void PacketHandler::C_UpdateUserListPage(Session* _pSession, char* _packet)
 			Room* pRoom = vecSession[i]->GetRoom();
 			if(pRoom) 
 				*(u_int*)(buffer + count) = pRoom->GetId();
-			count += sizeof(char);
+			count += sizeof(u_int);
 		}
 
 		if (loginedUserCount >= maxCount)
@@ -439,4 +443,26 @@ void PacketHandler::C_UpdateRoomListPage(Session* _pSession, char* _packet)
 	*(char*)(buffer + tempCount) = (char)numOfRoom;
 	*(ushort*)buffer = count;
 	send(_pSession->GetSocket(), buffer, count, 0);
+}
+
+void PacketHandler::C_UpdateUserSlot(Session* _pSession, char* _packet)
+{
+	Room* pRoom = _pSession->GetRoom();
+	if (!pRoom) return;
+
+	int choice = *(char*)_packet;
+	const tMember* member = pRoom->GetMemberInfo(_pSession);
+	if (member->characterChoice == choice) return;
+
+	pRoom->SetMemberChoice(_pSession, choice);
+	
+	char buffer[255];
+	ushort count = sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateUserSlot;			count += sizeof(ushort);
+	*(char*)(buffer + count) = (char)member->slotNumber;						count += sizeof(char);
+	*(char*)(buffer + count) = (char)member->characterChoice;					count += sizeof(char);
+	*(ushort*)buffer = count;
+	//send(_pSession->GetSocket(), buffer, count, 0);
+	pRoom->SendAll(buffer);
+
 }
