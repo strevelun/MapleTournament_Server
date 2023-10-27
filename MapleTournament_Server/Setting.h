@@ -33,7 +33,9 @@ enum class ePacketType
 	C_UpdateRoomListPage,
 	S_UpdateRoomListPage,
 	C_UpdateUserSlot,
-	S_UpdateUserSlot,
+	S_UpdateUserSlot, 
+	C_Skill,
+	S_Skill,
 };
 
 enum class eSessionState
@@ -43,6 +45,18 @@ enum class eSessionState
 	Lobby,
 	WatingRoom,
 	InGame
+};
+
+enum class eSkillType
+{
+	None,
+	AttackCloud,
+	LeftMove,
+	LeftDoubleMove,
+	RightMove,
+	RightDoubleMove,
+
+	NumOfSkills,
 };
 
 #endif

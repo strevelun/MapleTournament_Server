@@ -516,3 +516,32 @@ void PacketHandler::C_UpdateUserSlot(Session* _pSession, char* _packet)
 	pRoom->SendAll(buffer);
 
 }
+
+void PacketHandler::C_Skill(Session* _pSession, char* _packet)
+{
+	eSkillType type = eSkillType(*(char*)_packet);				_packet += sizeof(char);
+	Room* pRoom = _pSession->GetRoom();
+	if (!pRoom) return;
+	const tMember* member = pRoom->GetMemberInfo(_pSession);
+
+	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
+
+	if (type == eSkillType::LeftMove || type == eSkillType::LeftDoubleMove 
+		|| type == eSkillType::RightMove || type == eSkillType::RightDoubleMove)
+	{
+		type = pGame->Move(member->slotNumber, type);
+		if (type == eSkillType::None) return;
+	}
+	else if (type == eSkillType::AttackCloud)
+	{
+
+	}
+
+	char buffer[255];
+	ushort count = sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_Skill;			count += sizeof(ushort);
+	*(char*)(buffer + count) = member->slotNumber;						count += sizeof(char);
+	*(char*)(buffer + count) = (char)type;								count += sizeof(char);
+	*(ushort*)buffer = count;
+	pRoom->SendAll(buffer);
+}
