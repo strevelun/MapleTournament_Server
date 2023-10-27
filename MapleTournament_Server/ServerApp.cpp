@@ -2,6 +2,7 @@
 #include "Network/Selector.h"
 #include "Network/Session.h"
 #include "Managers/SessionManager.h"
+#include "Managers/GameManager.h"
 #include "Network/User.h"
 
 #include <iostream>
@@ -12,6 +13,7 @@ ServerApp::ServerApp()
 
 ServerApp::~ServerApp()
 {
+	GameManager::DestroyInst();
 	SessionManager::DestroyInst();
 	delete m_pSelector;
 	delete m_pListener;
@@ -31,6 +33,7 @@ bool ServerApp::Init(const char* _ip, int _port)
 
 	if (!m_pListener->Start(5)) return false;
 	if (!SessionManager::GetInst()->Init()) return false;
+	if (!GameManager::GetInst()->Init()) return false;
 
 	return true;
 }
@@ -41,5 +44,6 @@ void ServerApp::Run()
 	while (1)
 	{
 		m_pSelector->Select();
+		GameManager::GetInst()->Update();
 	}
 }

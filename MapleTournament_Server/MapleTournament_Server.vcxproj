@@ -127,7 +127,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Game.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Managers\GameManager.cpp" />
     <ClCompile Include="Managers\RoomManager.cpp" />
     <ClCompile Include="Managers\SessionManager.cpp" />
     <ClCompile Include="Managers\UserManager.cpp" />
@@ -140,6 +142,9 @@
     <ClCompile Include="ServerApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Defines.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="Managers\GameManager.h" />
     <ClInclude Include="Managers\RoomManager.h" />
     <ClInclude Include="Managers\SessionManager.h" />
     <ClInclude Include="Managers\UserManager.h" />

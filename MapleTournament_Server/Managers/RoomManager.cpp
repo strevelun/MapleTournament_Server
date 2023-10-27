@@ -1,7 +1,7 @@
 #include "RoomManager.h"
 #include "../Network/Room.h"
 
-RoomManager* RoomManager::m_inst = nullptr;
+RoomManager* RoomManager::m_pInst = nullptr;
 unsigned int RoomManager::m_roomId = 0;
 
 RoomManager::RoomManager()

@@ -36,7 +36,7 @@ typedef struct _tMember
 
 class Room
 {
-	unsigned int m_id;
+	unsigned int m_id; 
 	eRoomState m_eState = eRoomState::Ready;
 	wchar_t m_strTitle[20];
 	std::array<tMember, 4>		 m_arrMember; // TODO : Player

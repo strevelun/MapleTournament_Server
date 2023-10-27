@@ -3,7 +3,7 @@
 #include "../Network/Session.h"
 #include "../Network/User.h"
 
-SessionManager* SessionManager::m_inst = nullptr;
+SessionManager* SessionManager::m_pInst = nullptr;
 
 typedef unsigned short ushort;
 
