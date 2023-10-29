@@ -29,10 +29,10 @@ bool ServerApp::Init(const char* _ip, int _port)
 	}
 
 	m_pListener = new TCPListener(_ip, _port);
+	if (!SessionManager::GetInst()->Init(m_pListener->GetSocket())) return false;
 	m_pSelector = new Selector(m_pListener->GetSocket());
 
 	if (!m_pListener->Start(5)) return false;
-	if (!SessionManager::GetInst()->Init()) return false;
 	if (!GameManager::GetInst()->Init()) return false;
 
 	return true;

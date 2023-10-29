@@ -47,8 +47,7 @@ struct fd_set_ex : fd_set
 
 class Selector
 {
-	fd_set				m_fdReads;
-	fd_set_ex			m_fdUser;
+    fd_set_ex				m_fdReads;
 	SOCKET				m_hSocketServer;
 
 public:
@@ -56,11 +55,5 @@ public:
 	~Selector();
 
     void Select();
-
-	const fd_set_ex& GetFDUser() const { return m_fdUser; }
-
-	void RemoveSocket(SOCKET _socket) {
-        FD_CLR_EX(_socket, &m_fdUser); 
-    }
 };
 

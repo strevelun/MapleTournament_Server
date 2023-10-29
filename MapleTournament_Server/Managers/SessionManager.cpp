@@ -20,8 +20,10 @@ SessionManager::~SessionManager()
 	}
 }
 
-bool SessionManager::Init()
+bool SessionManager::Init(SOCKET _hSocketServer)
 {
+	FD_ZERO(&m_fdUser);
+	FD_SET_EX(_hSocketServer, &m_fdUser, nullptr);
 	return true;
 }
 
@@ -29,6 +31,7 @@ bool SessionManager::AddSession(Session* _pSession)
 {
 	if (m_vecSession.size() >= 64) return false;
 
+	FD_SET_EX(_pSession->GetSocket(), &m_fdUser, _pSession);
 	m_vecSession.push_back(_pSession);
 	return true;
 }
@@ -54,10 +57,25 @@ bool SessionManager::RemoveSession(SOCKET _socket)
 		{
 			delete* iter;
 			m_vecSession.erase(iter);
+			FD_CLR_EX(_socket, &m_fdUser);
+			closesocket(_socket);
 			return true;
 		}
 	}
 	return false;
+}
+
+u_int SessionManager::GetLoginedUserCount() const
+{
+	size_t size = m_vecSession.size();
+	u_int loginCount = 0;
+	for (size_t i = 0; i < size; i++)
+	{
+		eSessionState eState = m_vecSession[i]->GetSessionState();
+		if (eState == eSessionState::Login) continue;
+		loginCount++;
+	}
+	return loginCount;
 }
 
 void SessionManager::SendAll(char* _pBuffer, eSessionState _eSessionState, SOCKET _exceptSocket)

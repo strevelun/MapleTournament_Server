@@ -72,7 +72,9 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 	// WaitingRoom에 있는 경우, 같은 방에 있는 유저에게 Update
 	eSessionState eState = _pSession->GetSessionState();
 	Room* pRoom = _pSession->GetRoom();
-	const tMember* pMember = pRoom->GetMemberInfo(_pSession);
+	const tMember* pMember = nullptr;
+	if(pRoom)
+		pMember = pRoom->GetMemberInfo(_pSession);
 
 	if (eState == eSessionState::WatingRoom)
 	{
@@ -114,8 +116,10 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 
 	// Lobby or Login에 있는 경우 RemoveSession
 	SOCKET clientSocket = _pSession->GetSocket();
-	if(SessionManager::GetInst()->RemoveSession(clientSocket))
+	if (SessionManager::GetInst()->RemoveSession(clientSocket))
+	{
 		std::wcout << clientSocket << "로그아웃 성공!" << '\n';
+	}
 	else
 		std::wcout << clientSocket << "로그아웃 실패!" << '\n';
 
@@ -392,20 +396,29 @@ void PacketHandler::C_InGameReady(Session* _pSession, char* _packet)
 
 void PacketHandler::C_UpdateUserListPage(Session* _pSession, char* _packet)
 {
+	const int userListPageViewCount = 9;
 	const std::vector<Session*>& vecSession = SessionManager::GetInst()->GetVecSession();
+	size_t size = vecSession.size();
 	int newPage = *(char*)_packet;
-	int minCount = newPage * 9;
-	int maxCount = (newPage + 1) * 9;
 
-	int loginedUserCount = 0;
+	int minCount = newPage * userListPageViewCount;
+	u_int loginedUserCount = SessionManager::GetInst()->GetLoginedUserCount();
+	if (loginedUserCount <= minCount)
+	{
+		newPage = (loginedUserCount - 1) / userListPageViewCount; // 이 패킷을 받았다는 것은 로그인한 유저가 최소 1명
+		minCount = newPage * userListPageViewCount;
+	}
+	int maxCount = (newPage + 1) * userListPageViewCount;
+
+	// 현재 총 10명 접속중이라 1페이지에 한 명 남은거 보여주고 있었는데, 한 명이 접속을 종료하면 페이지 수를 출력 가능한 곳까지 당겨야 함. 만약 5페이지를 보고 있는데 나빼고 전원 접속 종료하면 0페이지로.
 
 	char buffer[255];
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateUserListPage;			count += sizeof(ushort);
 	count += sizeof(char);
-	*(char*)(buffer + count) = (char)newPage;						count += sizeof(char);
+	count += sizeof(char);
 
-	size_t size = vecSession.size();
+	loginedUserCount = 0;
 	for (size_t i = 0; i < size; i++)
 	{
 		eSessionState eState = vecSession[i]->GetSessionState();
@@ -434,20 +447,28 @@ void PacketHandler::C_UpdateUserListPage(Session* _pSession, char* _packet)
 		if (loginedUserCount >= maxCount)
 			break;
 	}
-	*(char*)(buffer + sizeof(ushort) + sizeof(ushort)) = (char)loginedUserCount - minCount;
+
+	*(char*)(buffer + sizeof(ushort) + sizeof(ushort)) = (char)newPage;
+	*(char*)(buffer + sizeof(ushort) + sizeof(ushort) + sizeof(char)) = (char)loginedUserCount - (newPage * userListPageViewCount);
 	*(ushort*)buffer = count;
 	send(_pSession->GetSocket(), buffer, count, 0);
 }
 
 void PacketHandler::C_UpdateRoomListPage(Session* _pSession, char* _packet)
 {
+	const int roomListPageViewCount = 10;
 	const std::map<unsigned int, Room*>& roomList = RoomManager::GetInst()->GetRoomList();
 	size_t roomListSize = roomList.size();
 	int numOfRoom = 0;
 
 	int newPage = *(char*)_packet;
-	int minCount = newPage * 10;
-	int maxCount = (newPage + 1) * 10;
+	int minCount = newPage * roomListPageViewCount;
+	if (roomListSize <= minCount)
+	{
+		newPage = roomListSize > 0 ? (roomListSize - 1) / roomListPageViewCount : 0; 
+		minCount = newPage * roomListPageViewCount;
+	}
+	int maxCount = (newPage + 1) * roomListPageViewCount;
 
 	if (roomListSize > 0 && roomListSize <= minCount) return;
 
@@ -476,6 +497,7 @@ void PacketHandler::C_UpdateRoomListPage(Session* _pSession, char* _packet)
 	for (; iter != iterEnd; iter++, numOfRoom++)
 	{
 		if (numOfRoom >= roomListSize) break;
+		if (numOfRoom >= roomListPageViewCount) break;
 
 		*(u_int*)(buffer + count) = iter->second->GetId();			count += sizeof(u_int);
 		*(ushort*)(buffer + count) = (ushort)iter->second->GetRoomState();			count += sizeof(ushort);
@@ -512,7 +534,6 @@ void PacketHandler::C_UpdateUserSlot(Session* _pSession, char* _packet)
 	*(char*)(buffer + count) = (char)member->slotNumber;						count += sizeof(char);
 	*(char*)(buffer + count) = (char)member->characterChoice;					count += sizeof(char);
 	*(ushort*)buffer = count;
-	//send(_pSession->GetSocket(), buffer, count, 0);
 	pRoom->SendAll(buffer);
 
 }
