@@ -73,21 +73,30 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 	eSessionState eState = _pSession->GetSessionState();
 	Room* pRoom = _pSession->GetRoom();
 	const tMember* pMember = nullptr;
-	if(pRoom)
+	if (pRoom)
+	{
 		pMember = pRoom->GetMemberInfo(_pSession);
 
-	if (eState == eSessionState::WatingRoom)
-	{
 		char buffer[255];
 		ushort count = sizeof(ushort);
 		unsigned int roomId = pRoom->GetId();
-		if (pRoom->GetMemberCount() <= 1)
+		unsigned int memberCount = pRoom->GetMemberCount();
+		pRoom->LeaveSession(_pSession);
+
+		if (eState == eSessionState::InGame)
+		{
+			Game* pGame = GameManager::GetInst()->FindGame(roomId);
+			pGame->RemovePlayer(pMember->slotNumber);
+			if (memberCount <= 1)
+				GameManager::GetInst()->DeleteGame(roomId);
+		}
+
+		if (memberCount <= 1)
 		{
 			RoomManager::GetInst()->DeleteRoom(roomId);
 		}
 		else
 		{
-			pRoom->LeaveSession(_pSession);
 			const tMember* pNewOwner = pRoom->GetRoomOwner();
 			Session* newOwnerSession = pNewOwner->pSession;
 
@@ -104,14 +113,6 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 			*(ushort*)buffer = count;
 			send(newOwnerSession->GetSocket(), buffer, count, 0);
 		}
-	}
-	else if (eState == eSessionState::InGame)
-	{
-		Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
-		pGame->RemovePlayer(pMember->slotNumber);
-		pRoom->LeaveSession(_pSession);
-
-		// TODO : More tasks
 	}
 
 	// Lobby or Login에 있는 경우 RemoveSession
