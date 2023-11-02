@@ -101,6 +101,7 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 			pGame->RemovePlayer(pMember->slotNumber);
 			if (memberCount <= 2) // 2명인 상태에서 한 명 이상이 게임 종료 한 경우
 			{
+				count = sizeof(ushort);
 				*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;				count += sizeof(ushort);
 				*(ushort*)buffer = count;
 				pRoom->SendAll(buffer);
