@@ -427,9 +427,6 @@ void PacketHandler::C_InGameReady(Session* _pSession, char* _packet)
 	}
 	*(ushort*)buffer = count;
 	send(_pSession->GetSocket(), buffer, count, 0);
-
-	
-
 	
 	// 전부 이 패킷을 보낸걸 확인한 후 Game 상태 변경
 	if (pGame->IsAllReady())
@@ -442,12 +439,11 @@ void PacketHandler::C_InGameReady(Session* _pSession, char* _packet)
 		send(memberList[slot].pSession->GetSocket(), buffer, count, 0);
 
 		count = sizeof(ushort);
-		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateDashboard;			count += sizeof(ushort);
-		*(char*)(buffer + count) = (char)pGame->GetCurTurn();				count += sizeof(char);
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_Standby;			count += sizeof(ushort);
 		*(ushort*)buffer = count;
 		pGame->SendAll(buffer);
 
-		pGame->SetGameState(eGameState::Choice);
+		//pGame->SetGameState(eGameState::Choice);
 	}
 }
 
@@ -698,4 +694,13 @@ void PacketHandler::C_LobbyInit(Session* _pSession, char* _packet)
 			send(userList[i].pSession->GetSocket(), buffer, count, 0);
 		}
 	}
+}
+
+void PacketHandler::C_Standby(Session* _pSession, char* _packet)
+{
+	Room* pRoom = _pSession->GetRoom();
+	const std::array<tMember, Game::RoomSlotNum>& memberList = pRoom->GetMemberList();
+	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
+
+
 }

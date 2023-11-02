@@ -20,6 +20,7 @@ std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallb
 	{ ePacketType::C_NextTurn, PacketHandler::C_NextTurn },
 	{ ePacketType::C_GameOver, PacketHandler::C_GameOver },
 	{ ePacketType::C_LobbyInit, PacketHandler::C_LobbyInit },
+	{ ePacketType::C_Standby, PacketHandler::C_Standby },
 };
 
 Session::Session(SOCKET _socket) :

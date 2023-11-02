@@ -21,5 +21,6 @@ public:
 	static void C_NextTurn(Session* _pSession, char* _packet);
 	static void C_GameOver(Session* _pSession, char* _packet);
 	static void C_LobbyInit(Session* _pSession, char* _packet);
+	static void C_Standby(Session* _pSession, char* _packet);
 };
 
