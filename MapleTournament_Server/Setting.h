@@ -43,6 +43,7 @@ enum class ePacketType
 	C_GameOver,
 	S_GameOverSceneChange,
 	C_LobbyInit,
+	S_UpdateIngameUserLeave,
 };
 
 enum class eSessionState

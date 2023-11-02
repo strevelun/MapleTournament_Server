@@ -87,6 +87,12 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 		{
 			Game* pGame = GameManager::GetInst()->FindGame(roomId); 
 			int curPlayerSlot = pGame->GetCurPlayerSlot();
+
+			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateIngameUserLeave;				count += sizeof(ushort);
+			*(char*)(buffer + count) = (char)curPlayerSlot;					count += sizeof(char);
+			*(ushort*)buffer = count;
+			pRoom->SendAll(buffer);
+
 			if (curPlayerSlot == pMember->slotNumber)
 			{
 				pGame->OnNextTurn();
@@ -215,16 +221,21 @@ void PacketHandler::C_JoinRoom(Session* _pSession, char* _packet)
 		unsigned int userCount = pRoom->GetMemberCount();
 		*(ushort*)(buffer + count) = (ushort)userCount;							count += sizeof(ushort);
 		const std::array<tMember, 4>& userList = pRoom->GetMemberList();
+		
 		const wchar_t* nickname = nullptr;
-		size_t size = userList.size();
 		Session* s = nullptr;
 		User* user = nullptr;
+
+		size_t size = userList.size();
 		for (int i=0; i< size; i++)
 		{
 			if (userList[i].pSession == nullptr)				continue;
+
 			*(char*)(buffer + count) = (char)i;									count += sizeof(char);
 			*(char*)(buffer + count) = (char)userList[i].characterChoice;									count += sizeof(char);
-			*(ushort*)(buffer + count) = (ushort)userList[i]._eType;			count += sizeof(ushort);
+			*(char*)(buffer + count) = (char)userList[i]._eType;			count += sizeof(char);
+			*(char*)(buffer + count) = (char)userList[i]._eState;				count += sizeof(char);
+
 			s = userList[i].pSession;
 			user = s->GetUser();
 			nickname = user->GetNickname();
