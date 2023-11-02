@@ -50,7 +50,7 @@ enum class eSessionState
 	None,
 	Login,
 	Lobby,
-	WatingRoom,
+	WaitingRoom,
 	InGame
 };
 

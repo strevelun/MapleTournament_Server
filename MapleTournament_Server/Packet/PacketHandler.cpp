@@ -85,7 +85,12 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 
 		if (eState == eSessionState::InGame)
 		{
-			Game* pGame = GameManager::GetInst()->FindGame(roomId); // 게임끝나고 웨이팅룸에서 나가면 NULL 리턴
+			Game* pGame = GameManager::GetInst()->FindGame(roomId); 
+			int curPlayerSlot = pGame->GetCurPlayerSlot();
+			if (curPlayerSlot == pMember->slotNumber)
+			{
+				pGame->OnNextTurn();
+			}
 			pGame->RemovePlayer(pMember->slotNumber);
 			if (memberCount <= 1)
 				GameManager::GetInst()->DeleteGame(roomId);
@@ -131,7 +136,7 @@ void PacketHandler::C_CreateRoom(Session* _pSession, char* _packet)
 {
 	SOCKET clientSocket = _pSession->GetSocket();
 	Room* pRoom = RoomManager::GetInst()->CreateRoom((wchar_t*)_packet);
-	_pSession->ChangeSessionState(eSessionState::WatingRoom);
+	_pSession->ChangeSessionState(eSessionState::WaitingRoom);
 	_pSession->SetRoom(pRoom);
 	pRoom->AddSession(_pSession, eMemberType::Owner);
 
@@ -166,7 +171,7 @@ void PacketHandler::C_Chat(Session* _pSession, char* _packet)
 	{
 		SessionManager::GetInst()->SendAll(_packet, eSessionState::Lobby);
 	}
-	else if(eState == eSessionState::WatingRoom)
+	else if(eState == eSessionState::WaitingRoom)
 	{
 		Room* pRoom = _pSession->GetRoom();
 		pRoom->SendAll(_packet);
@@ -191,7 +196,7 @@ void PacketHandler::C_JoinRoom(Session* _pSession, char* _packet)
 	}
 	else
 	{
-		_pSession->ChangeSessionState(eSessionState::WatingRoom);
+		_pSession->ChangeSessionState(eSessionState::WaitingRoom);
 		_pSession->SetRoom(pRoom);
 		User* pUser = _pSession->GetUser();
 		pRoom->AddSession(_pSession);
@@ -358,8 +363,6 @@ void PacketHandler::C_UserRoomReady(Session* _pSession, char* _packet)
 	eMemberState changeState = eMemberState(3 - (int)state);
 	pRoom->SetMemberState(_pSession, changeState);
 
-	_pSession->ChangeSessionState(eSessionState::InGame);
-
 	char buffer[255];
 	ushort count = sizeof(ushort);		
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateUserState;			count += sizeof(ushort);
@@ -381,6 +384,7 @@ void PacketHandler::C_InGameReady(Session* _pSession, char* _packet)
 	Room* pRoom = _pSession->GetRoom();
 	const std::array<tMember, Game::RoomSlotNum>& memberList = pRoom->GetMemberList();
 	const tMember* tm = pRoom->GetMemberInfo(_pSession);
+	_pSession->ChangeSessionState(eSessionState::InGame);
 
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
 	tPlayer* player = pGame->FindPlayer(tm->slotNumber);
@@ -612,34 +616,14 @@ void PacketHandler::C_NextTurn(Session* _pSession, char* _packet)
 	if (!pRoom) return;
 
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
-	int curPlayerSlot = pGame->UpdateNextTurn();
-	if (curPlayerSlot == -1)
-	{
-		pGame->IncreaseCurTurn();
-
-		char buffer[255];
-		ushort count = sizeof(ushort);
-		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateDashboard;			count += sizeof(ushort);
-		*(char*)(buffer + count) = (char)pGame->GetCurTurn();				count += sizeof(char);
-		*(ushort*)buffer = count;
-		pGame->SendAll(buffer);
-
-		curPlayerSlot = pGame->UpdateNextTurn();
-	}
-	tPlayer* pCurPlayer = pGame->FindPlayer(curPlayerSlot);
-
-	char buffer[255];
-	ushort count = sizeof(ushort);
-	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
-	*(ushort*)buffer = count;
-	send(pCurPlayer->socket, buffer, count, 0);
+	pGame->OnNextTurn();
 }
 
 void PacketHandler::C_GameOver(Session* _pSession, char* _packet)
 {
 	Room* pRoom = _pSession->GetRoom();
 	pRoom->SetRoomState(eRoomState::Ready);
-	_pSession->ChangeSessionState(eSessionState::WatingRoom);
+	_pSession->ChangeSessionState(eSessionState::WaitingRoom);
 }
 
 void PacketHandler::C_LobbyInit(Session* _pSession, char* _packet)
@@ -650,7 +634,7 @@ void PacketHandler::C_LobbyInit(Session* _pSession, char* _packet)
 	char buffer[255];
 	ushort count = sizeof(ushort);
 
-	if (state == eSessionState::WatingRoom)
+	if (state == eSessionState::WaitingRoom)
 	{
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOverSceneChange;			count += sizeof(ushort);
 

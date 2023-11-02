@@ -51,6 +51,7 @@ public:
 
 	eGameState GetGameState() const { return m_eGameState; }
 	unsigned int GetCurTurn() const { return m_curTurn; }
+	int	GetCurPlayerSlot() const { return m_curPlayerSlot; }
 
 	void IncreaseCurTurn() { m_curTurn++; }
 	
@@ -63,5 +64,6 @@ public:
 
 public:
 	eSkillType Move(int _slot, eSkillType _type);// slot으로 플레이어 구분
+	void OnNextTurn();
 };
 

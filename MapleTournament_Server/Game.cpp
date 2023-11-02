@@ -142,3 +142,28 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 	}
 	return _type;
 }
+
+void Game::OnNextTurn()
+{
+	int curPlayerSlot = UpdateNextTurn();
+	if (curPlayerSlot == -1)
+	{
+		IncreaseCurTurn();
+
+		char buffer[255];
+		ushort count = sizeof(ushort);
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateDashboard;			count += sizeof(ushort);
+		*(char*)(buffer + count) = (char)GetCurTurn();				count += sizeof(char);
+		*(ushort*)buffer = count;
+		SendAll(buffer);
+
+		curPlayerSlot = UpdateNextTurn();
+	}
+	tPlayer* pCurPlayer = FindPlayer(curPlayerSlot);
+
+	char buffer[255];
+	ushort count = sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
+	*(ushort*)buffer = count;
+	send(pCurPlayer->socket, buffer, count, 0);
+}
