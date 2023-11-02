@@ -138,7 +138,7 @@ bool Room::IsRoomReady()
 	if (m_memberCount <= 1) return false;
 	for (size_t i = 0; i < size; i++)
 	{
-		if (m_arrMember[i]._eState == eMemberState::Wait)
+		if (m_arrMember[i]._eState == eMemberState::Wait && m_arrMember[i]._eType == eMemberType::Member)
 				return false;
 	}
 	return true;

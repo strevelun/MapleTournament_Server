@@ -90,17 +90,23 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 			if (curPlayerSlot == pMember->slotNumber)
 			{
 				pGame->OnNextTurn();
+
 			}
 			pGame->RemovePlayer(pMember->slotNumber);
-			if (memberCount <= 1)
+			if (memberCount <= 2) // 2명인 상태에서 한 명 이상이 게임 종료 한 경우
+			{
+				*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;				count += sizeof(ushort);
+				*(ushort*)buffer = count;
+				pRoom->SendAll(buffer);
 				GameManager::GetInst()->DeleteGame(roomId);
+			}
 		}
 
 		if (memberCount <= 1)
 		{
 			RoomManager::GetInst()->DeleteRoom(roomId);
 		}
-		else
+		else if (eState == eSessionState::WaitingRoom)
 		{
 			const tMember* pNewOwner = pRoom->GetRoomOwner();
 			Session* newOwnerSession = pNewOwner->pSession;
@@ -616,7 +622,8 @@ void PacketHandler::C_NextTurn(Session* _pSession, char* _packet)
 	if (!pRoom) return;
 
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
-	pGame->OnNextTurn();
+	if(pGame)
+		pGame->OnNextTurn();
 }
 
 void PacketHandler::C_GameOver(Session* _pSession, char* _packet)
