@@ -13,10 +13,7 @@ ServerApp::ServerApp()
 
 ServerApp::~ServerApp()
 {
-	GameManager::DestroyInst();
-	SessionManager::DestroyInst();
-	delete m_pSelector;
-	delete m_pListener;
+	CloseEverything();
 }
 
 bool ServerApp::Init(const char* _ip, int _port)
@@ -46,4 +43,12 @@ void ServerApp::Run()
 		m_pSelector->Select();
 		GameManager::GetInst()->Update();
 	}
+}
+
+void ServerApp::CloseEverything()
+{
+	GameManager::DestroyInst();
+	SessionManager::DestroyInst();
+	delete m_pSelector;
+	delete m_pListener;
 }

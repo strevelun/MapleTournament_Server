@@ -44,4 +44,23 @@ bool GameManager::DeleteGame(unsigned int _id)
 
 void GameManager::Update()
 {
+	if (m_mapGame.size() == 0) return;
+
+	std::map<unsigned int, Game*>::iterator iter = m_mapGame.begin();
+	std::map<unsigned int, Game*>::iterator iterEnd = m_mapGame.end();
+
+	for (; iter != iterEnd; )
+	{
+		if (iter->second->IsEnd())
+		{
+			delete iter->second;
+			iter = m_mapGame.erase(iter);
+			continue;
+		}
+		else
+		{
+			iter->second->Update();
+			iter++;
+		}
+	}
 }

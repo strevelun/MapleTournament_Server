@@ -105,7 +105,7 @@
       <Filter>Managers</Filter>
     </ClInclude>
     <ClInclude Include="Defines.h">
-      <Filter>소스 파일</Filter>
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

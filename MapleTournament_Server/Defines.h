@@ -16,3 +16,5 @@ public: \
 		if (m_pInst) delete m_pInst; \
 		m_pInst = nullptr; \
 	} 
+
+#define GAME_MAX_TURN			1

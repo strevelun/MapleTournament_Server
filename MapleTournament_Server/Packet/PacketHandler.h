@@ -18,5 +18,8 @@ public:
 	static void C_UpdateRoomListPage(Session* _pSession, char* _packet);
 	static void C_UpdateUserSlot(Session* _pSession, char* _packet);
 	static void C_Skill(Session* _pSession, char* _packet);
+	static void C_NextTurn(Session* _pSession, char* _packet);
+	static void C_GameOver(Session* _pSession, char* _packet);
+	static void C_LobbyInit(Session* _pSession, char* _packet);
 };
 

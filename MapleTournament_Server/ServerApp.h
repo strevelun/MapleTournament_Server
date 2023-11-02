@@ -8,8 +8,8 @@ class Session;
 class ServerApp
 {
 private:
-    TCPListener* m_pListener;
-    Selector* m_pSelector;
+    TCPListener* m_pListener = nullptr;
+    Selector* m_pSelector = nullptr;
 
 public:
     ServerApp();
@@ -17,5 +17,7 @@ public:
 
     bool Init(const char* _ip, int _port);
     void Run();
+
+    void CloseEverything();
 };
 

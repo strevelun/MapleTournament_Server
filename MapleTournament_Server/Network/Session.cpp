@@ -17,6 +17,9 @@ std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallb
 	{ ePacketType::C_UpdateRoomListPage, PacketHandler::C_UpdateRoomListPage },
 	{ ePacketType::C_UpdateUserSlot, PacketHandler::C_UpdateUserSlot },
 	{ ePacketType::C_Skill, PacketHandler::C_Skill },
+	{ ePacketType::C_NextTurn, PacketHandler::C_NextTurn },
+	{ ePacketType::C_GameOver, PacketHandler::C_GameOver },
+	{ ePacketType::C_LobbyInit, PacketHandler::C_LobbyInit },
 };
 
 Session::Session(SOCKET _socket) :

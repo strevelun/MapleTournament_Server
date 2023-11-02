@@ -22,10 +22,13 @@ void Selector::Select()
 	u_short				packetSize = 0;
 	char				recvBuffer[255];
 
+	timeval timeout = { 0, 0 };
+
 	//m_fdReads = m_fdUser;
 	const fd_set_ex& _fdUser = SessionManager::GetInst()->GetFDUser();
 	m_fdReads = _fdUser;
-	int	iRet = select(0, &m_fdReads, 0, 0, 0);
+	int	iRet = select(0, &m_fdReads, 0, 0, &timeout);
+	if (iRet == 0) return;
 	if (iRet == SOCKET_ERROR) return;
 
 	for (u_int i = 0; i < _fdUser.fd_count; i++)
@@ -37,7 +40,7 @@ void Selector::Select()
 			{
 				if (m_fdReads.fd_count >= FD_SETSIZE)
 				{
-					printf("현재 서버소켓 포함 총 %d개이기 때문에 접속 거부됨.\n", m_fdReads.fd_count);
+					printf("현재 서버소켓 포함 총 %d개이기 때문에 접속 거부됨. (최대 64개)\n", m_fdReads.fd_count);
 					continue;
 				}
 
