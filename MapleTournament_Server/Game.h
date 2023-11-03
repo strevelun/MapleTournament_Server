@@ -10,17 +10,11 @@ typedef struct _tPlayer
 {
 	SOCKET socket = 0;
 	bool ready = false;
+	bool standby = false;
 	int hp = 10;
 	int slot = 0;
 	int xpos = 0, ypos = 0;
 } tPlayer;
-
-enum class eGameState
-{
-	None,
-	Choice,
-	UseSkill
-};
 
 class Game
 {
@@ -35,8 +29,6 @@ private:
 	int m_curPlayerSlot = -1;
 	unsigned int m_curTurn = 1;
 
-	eGameState m_eGameState = eGameState::None;
-
 public:
 	Game();
 	~Game();
@@ -47,15 +39,14 @@ public:
 	tPlayer* FindPlayer(int _slot);
 	bool RemovePlayer(int _slot);
 
-	void SetGameState(eGameState _state) { m_eGameState = _state; }
 
-	eGameState GetGameState() const { return m_eGameState; }
 	unsigned int GetCurTurn() const { return m_curTurn; }
 	int	GetCurPlayerSlot() const { return m_curPlayerSlot; }
 
 	void IncreaseCurTurn() { m_curTurn++; }
 	
 	bool IsAllReady() const;
+	bool IsAllStandby() const;
 	bool IsEnd() const { return m_isEnd; }
 
 	int UpdateNextTurn();

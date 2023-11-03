@@ -86,26 +86,29 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 		if (eState == eSessionState::InGame)
 		{
 			Game* pGame = GameManager::GetInst()->FindGame(roomId); 
-			int curPlayerSlot = pGame->GetCurPlayerSlot();
-
-			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateIngameUserLeave;				count += sizeof(ushort);
-			*(char*)(buffer + count) = (char)curPlayerSlot;					count += sizeof(char);
-			*(ushort*)buffer = count;
-			pRoom->SendAll(buffer);
-
-			if (curPlayerSlot == pMember->slotNumber)
+			if (pGame)
 			{
-				pGame->OnNextTurn();
+				int curPlayerSlot = pGame->GetCurPlayerSlot();
 
-			}
-			pGame->RemovePlayer(pMember->slotNumber);
-			if (memberCount <= 2) // 2명인 상태에서 한 명 이상이 게임 종료 한 경우
-			{
-				count = sizeof(ushort);
-				*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;				count += sizeof(ushort);
+				*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateIngameUserLeave;				count += sizeof(ushort);
+				*(char*)(buffer + count) = (char)curPlayerSlot;					count += sizeof(char);
 				*(ushort*)buffer = count;
 				pRoom->SendAll(buffer);
-				GameManager::GetInst()->DeleteGame(roomId);
+
+				if (curPlayerSlot == pMember->slotNumber)
+				{
+					pGame->OnNextTurn();
+
+				}
+				pGame->RemovePlayer(pMember->slotNumber);
+				if (memberCount <= 2) // 2명인 상태에서 한 명 이상이 게임 종료 한 경우
+				{
+					count = sizeof(ushort);
+					*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;				count += sizeof(ushort);
+					*(ushort*)buffer = count;
+					pRoom->SendAll(buffer);
+					GameManager::GetInst()->DeleteGame(roomId);
+				}
 			}
 		}
 
@@ -431,13 +434,6 @@ void PacketHandler::C_InGameReady(Session* _pSession, char* _packet)
 	// 전부 이 패킷을 보낸걸 확인한 후 Game 상태 변경
 	if (pGame->IsAllReady())
 	{
-		int slot = pGame->UpdateNextTurn();
-
-		count = sizeof(ushort);
-		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
-		*(ushort*)buffer = count;
-		send(memberList[slot].pSession->GetSocket(), buffer, count, 0);
-
 		count = sizeof(ushort);
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_Standby;			count += sizeof(ushort);
 		*(ushort*)buffer = count;
@@ -598,17 +594,15 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 	if (!pRoom) return;
 	
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
-	if (pGame->GetGameState() == eGameState::None) return;
-
-	pGame->SetGameState(eGameState::UseSkill);
 		
 	const tMember* member = pRoom->GetMemberInfo(_pSession);
 
 	if (type == eSkillType::LeftMove || type == eSkillType::LeftDoubleMove 
-		|| type == eSkillType::RightMove || type == eSkillType::RightDoubleMove)
+		|| type == eSkillType::RightMove || type == eSkillType::RightDoubleMove
+		|| type == eSkillType::UpMove || type == eSkillType::DownMove)
 	{
 		type = pGame->Move(member->slotNumber, type);
-		if (type == eSkillType::None) return;
+		//if (type == eSkillType::None) return;
 	}
 	else if (type == eSkillType::AttackCloud)
 	{
@@ -622,6 +616,7 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 	*(char*)(buffer + count) = (char)type;								count += sizeof(char);
 	*(ushort*)buffer = count;
 	pRoom->SendAll(buffer);
+
 }
 
 void PacketHandler::C_NextTurn(Session* _pSession, char* _packet)
@@ -696,11 +691,24 @@ void PacketHandler::C_LobbyInit(Session* _pSession, char* _packet)
 	}
 }
 
+// 스탠바이 중 나간 유저 체크
 void PacketHandler::C_Standby(Session* _pSession, char* _packet)
 {
 	Room* pRoom = _pSession->GetRoom();
 	const std::array<tMember, Game::RoomSlotNum>& memberList = pRoom->GetMemberList();
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
 
+	tPlayer* pPlayer = pGame->FindPlayer(pRoom->GetMemberInfo(_pSession)->slotNumber);
+	pPlayer->standby = true;
 
+	if (pGame->IsAllStandby())
+	{
+		int slot = pGame->UpdateNextTurn();
+
+		char buffer[255];
+		ushort count = sizeof(ushort);
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
+		*(ushort*)buffer = count;
+		send(memberList[slot].pSession->GetSocket(), buffer, count, 0);
+	}
 }

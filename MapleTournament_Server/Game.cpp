@@ -55,6 +55,14 @@ bool Game::IsAllReady() const
 	return true;
 }
 
+bool Game::IsAllStandby() const
+{
+	for (int i = 0; i < RoomSlotNum; i++)
+		if (m_arrPlayer[i] && m_arrPlayer[i]->standby == false)
+			return false;
+	return true;
+}
+
 int Game::UpdateNextTurn()
 {
 	do 
@@ -80,7 +88,7 @@ void Game::SendAll(char* _buffer)
 eSkillType Game::Move(int _slot, eSkillType _type)
 {
 	tPlayer* pPlayer = FindPlayer(_slot);
-	if (!pPlayer) return eSkillType::None ; 
+	if (!pPlayer) return eSkillType::None; 
 
 	if (_type == eSkillType::LeftMove)
 	{
@@ -136,6 +144,28 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 			m_arrBoard[pPlayer->ypos][pPlayer->xpos + 1] = pPlayer;
 			pPlayer->xpos += 1;
 			_type = eSkillType::RightMove;
+		}
+		else
+			return eSkillType::None;
+	}
+	else if (_type == eSkillType::UpMove)
+	{
+		if (pPlayer->ypos - 1 >= 0)
+		{
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos] = nullptr;
+			m_arrBoard[pPlayer->ypos - 1][pPlayer->xpos] = pPlayer;
+			pPlayer->ypos -= 1;
+		}
+		else
+			return eSkillType::None;
+	}
+	else if (_type == eSkillType::DownMove)
+	{
+		if (pPlayer->ypos + 1 < 4)
+		{
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos] = nullptr;
+			m_arrBoard[pPlayer->ypos + 1][pPlayer->xpos] = pPlayer;
+			pPlayer->ypos += 1;
 		}
 		else
 			return eSkillType::None;
