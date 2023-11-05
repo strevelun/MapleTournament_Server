@@ -46,6 +46,7 @@ enum class ePacketType
 	S_UpdateIngameUserLeave,
 	S_Standby,
 	C_Standby,
+	S_UpdateProfile,
 };
 
 enum class eSessionState

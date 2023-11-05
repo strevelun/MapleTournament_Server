@@ -10,7 +10,13 @@ GameManager::GameManager()
 
 GameManager::~GameManager()
 {
+	std::map<unsigned int, Game*>::iterator iter = m_mapGame.begin();
+	std::map<unsigned int, Game*>::iterator iterEnd = m_mapGame.end();
 
+	for (; iter != iterEnd; )
+	{
+		delete iter->second;
+	}
 }
 
 bool GameManager::Init()
@@ -60,7 +66,7 @@ void GameManager::Update()
 		else
 		{
 			iter->second->Update();
-			iter++;
+			++iter;
 		}
 	}
 }

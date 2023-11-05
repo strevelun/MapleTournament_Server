@@ -51,7 +51,7 @@ bool SessionManager::RemoveSession(SOCKET _socket)
 	std::vector<Session*>::iterator iter = m_vecSession.begin();
 	std::vector<Session*>::iterator iterEnd = m_vecSession.end();
 
-	for (; iter != iterEnd; iter++)
+	for (; iter != iterEnd; ++iter)
 	{
 		if ((*iter)->GetSocket() == _socket)
 		{

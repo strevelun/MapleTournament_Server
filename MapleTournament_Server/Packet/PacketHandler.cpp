@@ -152,6 +152,7 @@ void PacketHandler::C_CreateRoom(Session* _pSession, char* _packet)
 {
 	SOCKET clientSocket = _pSession->GetSocket();
 	Room* pRoom = RoomManager::GetInst()->CreateRoom((wchar_t*)_packet);
+	User* pUser = _pSession->GetUser();
 	_pSession->ChangeSessionState(eSessionState::WaitingRoom);
 	_pSession->SetRoom(pRoom);
 	pRoom->AddSession(_pSession, eMemberType::Owner);
@@ -159,11 +160,14 @@ void PacketHandler::C_CreateRoom(Session* _pSession, char* _packet)
 	std::wcout << clientSocket << "가 방 생성!" << '\n';
 	
 	const wchar_t* roomTitle = pRoom->GetRoomTitle();
+	const wchar_t* nickname = pUser->GetNickname();
 
 	char buffer[255];
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_CreateRoom;		count += sizeof(ushort);
 	memcpy(buffer + count, roomTitle, wcslen(roomTitle) * 2);				count += (ushort)wcslen(roomTitle) * 2;
+	*(wchar_t*)(buffer + count) = L'\0';								count += 2;
+	memcpy(buffer + count, nickname, wcslen(nickname) * 2);				count += (ushort)wcslen(nickname) * 2;
 	*(wchar_t*)(buffer + count) = L'\0';								count += 2;
 	*(ushort*)buffer = count;
 	send(clientSocket, buffer, count, 0);
@@ -543,7 +547,7 @@ void PacketHandler::C_UpdateRoomListPage(Session* _pSession, char* _packet)
 	User* pUser = nullptr;
 	const wchar_t* pOwnerNickname = nullptr;
 
-	for (; iter != iterEnd; iter++, numOfRoom++)
+	for (; iter != iterEnd; ++iter, numOfRoom++)
 	{
 		if (numOfRoom >= roomListSize) break;
 		if (numOfRoom >= roomListPageViewCount) break;
@@ -687,6 +691,19 @@ void PacketHandler::C_LobbyInit(Session* _pSession, char* _packet)
 			*(char*)(buffer + count) = (char)userList[i]._eType;				count += sizeof(char);
 				*(ushort*)buffer = count;
 			send(userList[i].pSession->GetSocket(), buffer, count, 0);
+		}
+	}
+	else if (state == eSessionState::Lobby) // 로그인 해서 막 로비에 들어온 경우
+	{
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateProfile;			count += sizeof(ushort);
+		User* pUser = _pSession->GetUser();
+		if (pUser)
+		{
+			const wchar_t* myNickname = pUser->GetNickname();
+			memcpy(buffer + count, myNickname, wcslen(myNickname) * 2);				count += (ushort)wcslen(myNickname) * 2;
+			*(wchar_t*)(buffer + count) = L'\0';								count += 2;
+			*(ushort*)buffer = count;
+			send(_pSession->GetSocket(), buffer, count, 0);
 		}
 	}
 }
