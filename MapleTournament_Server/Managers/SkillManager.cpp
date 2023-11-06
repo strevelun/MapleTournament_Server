@@ -98,6 +98,7 @@ const tSkill* SkillManager::GetSkillCoordinateList(eSkillType _type) const
 eSkillType SkillManager::GetSkillType(const std::string& name)
 {
 	if (name == "Attack0") return eSkillType::Attack0;
+	if (name == "Attack0_Left") return eSkillType::Attack0_Left;
 
     return eSkillType::None;
 }

@@ -11,6 +11,7 @@ typedef struct _tSkill
 {
 	std::list<std::pair<int, int>> listCoordniates;
 	int strikePower = 0;
+	int mp = 0;
 } tSkill;
 
 class SkillManager

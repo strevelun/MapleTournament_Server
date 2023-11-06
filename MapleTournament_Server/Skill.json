@@ -2,10 +2,19 @@
   {
     "name": "Attack0",
     "coordinates": [
-      [ -1, 0 ],
       [ 0, 0 ],
-      [ 1, 0 ]
+      [ 1, 0 ],
+      [ 2, 0 ]
     ],
-    "strikePower":  2
+    "strikePower": 2
+  },
+  {
+    "name": "Attack0_Left",
+    "coordinates": [
+      [ 0, 0 ],
+      [ -1, 0 ],
+      [ -2, 0 ]
+    ],
+    "strikePower": 2
   }
 ]

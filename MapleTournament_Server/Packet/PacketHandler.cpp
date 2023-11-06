@@ -694,18 +694,18 @@ void PacketHandler::C_LobbyInit(Session* _pSession, char* _packet)
 			send(userList[i].pSession->GetSocket(), buffer, count, 0);
 		}
 	}
-	else if (state == eSessionState::Lobby) // 로그인 해서 막 로비에 들어온 경우
+
+	count = sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateProfile;			count += sizeof(ushort);
+	User* pUser = _pSession->GetUser();
+	if (pUser)
 	{
-		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateProfile;			count += sizeof(ushort);
-		User* pUser = _pSession->GetUser();
-		if (pUser)
-		{
-			const wchar_t* myNickname = pUser->GetNickname();
-			memcpy(buffer + count, myNickname, wcslen(myNickname) * 2);				count += (ushort)wcslen(myNickname) * 2;
-			*(wchar_t*)(buffer + count) = L'\0';								count += 2;
-			*(ushort*)buffer = count;
-			send(_pSession->GetSocket(), buffer, count, 0);
-		}
+		const wchar_t* myNickname = pUser->GetNickname();
+		memcpy(buffer + count, myNickname, wcslen(myNickname) * 2);				count += (ushort)wcslen(myNickname) * 2;
+		*(wchar_t*)(buffer + count) = L'\0';								count += 2;
+		*(u_int*)(buffer + count) = pUser->GetHitCount();					count += sizeof(u_int);
+		*(ushort*)buffer = count;
+		send(_pSession->GetSocket(), buffer, count, 0);
 	}
 }
 

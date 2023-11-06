@@ -67,5 +67,8 @@ public:
 	eSkillType Move(int _slot, eSkillType _type);// slot으로 플레이어 구분
 	void GetHitPlayerList(int _slot, std::list<tPlayer*>& _list);
 	void OnNextTurn();
+
+private:
+	void OnGameOver();
 };
 

@@ -2,6 +2,9 @@
 #include "Network/Session.h"
 #include "Defines.h"
 #include "Managers/SkillManager.h"
+#include "Managers/SessionManager.h"
+#include "Network/Session.h"
+#include "Network/User.h"
 
 typedef unsigned short ushort;
 
@@ -22,13 +25,7 @@ void Game::Update()
 {
 	if (m_curTurn > GAME_MAX_TURN)
 	{
-		m_isEnd = true;
-
-		char buffer[255];
-		ushort count = sizeof(ushort);
-		*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;			count += sizeof(ushort);
-		*(ushort*)buffer = count;
-		SendAll(buffer);
+		OnGameOver();
 	}
 }
 
@@ -228,9 +225,9 @@ void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list)
 			if (pCounterPlayer)
 			{
 				if (pCounterPlayer->_eSkillType == eSkillType::Shield)
-				{
 					pCounterPlayer->score += strikePower / 2;
-				}
+				else
+					pCounterPlayer->score += strikePower;
 				_list.push_back(pCounterPlayer);
 			}
 		}
@@ -251,7 +248,6 @@ void Game::OnNextTurn()
 				m_arrPlayer[i]->_eSkillType = eSkillType::None;
 		}
 
-
 		char buffer[255];
 		ushort count = sizeof(ushort);
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateDashboard;			count += sizeof(ushort);
@@ -268,4 +264,23 @@ void Game::OnNextTurn()
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
 	*(ushort*)buffer = count;
 	send(pCurPlayer->socket, buffer, count, 0);
+}
+
+void Game::OnGameOver()
+{
+	m_isEnd = true;
+
+	for (int i = 0; i < RoomSlotNum; i++)
+		if (m_arrPlayer[i])
+		{
+			Session* pSsesion = SessionManager::GetInst()->FindSession(m_arrPlayer[i]->socket);
+			User* pUser = pSsesion->GetUser();
+			pUser->AddHitCount(m_arrPlayer[i]->score);
+		}
+
+	char buffer[255];
+	ushort count = sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;			count += sizeof(ushort);
+	*(ushort*)buffer = count;
+	SendAll(buffer);
 }
