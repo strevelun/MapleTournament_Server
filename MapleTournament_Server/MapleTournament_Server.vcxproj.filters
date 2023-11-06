@@ -63,6 +63,12 @@
     <ClCompile Include="Managers\GameManager.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
+    <ClCompile Include="Managers\SkillManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dist\jsoncpp.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Setting.h">
@@ -105,6 +111,15 @@
       <Filter>Managers</Filter>
     </ClInclude>
     <ClInclude Include="Defines.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Managers\SkillManager.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dist\json\json.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dist\json\json-forwards.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

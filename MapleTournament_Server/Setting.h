@@ -47,6 +47,10 @@ enum class ePacketType
 	S_Standby,
 	C_Standby,
 	S_UpdateProfile,
+	C_CheckHit,
+	S_CheckHit,
+	C_UpdateScore,
+	S_UpdateScore,
 };
 
 enum class eSessionState
@@ -61,14 +65,15 @@ enum class eSessionState
 enum class eSkillType
 {
 	None,
-	AttackCloud,
+	Shield,
+	Attack0,
 	LeftMove,
 	LeftDoubleMove,
 	RightMove,
 	RightDoubleMove,
 	UpMove,
 	DownMove,
-
+	Hit,
 	NumOfSkills,
 };
 

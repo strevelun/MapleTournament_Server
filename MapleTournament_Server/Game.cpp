@@ -1,5 +1,7 @@
 #include "Game.h"
+#include "Network/Session.h"
 #include "Defines.h"
+#include "Managers/SkillManager.h"
 
 typedef unsigned short ushort;
 
@@ -33,6 +35,7 @@ void Game::Update()
 void Game::AddPlayer(tPlayer* _pPlayer)
 {
 	m_arrPlayer[_pPlayer->slot] = _pPlayer;
+	m_arrBoard[_pPlayer->ypos][_pPlayer->xpos][_pPlayer->slot] = _pPlayer;
 }
 
 tPlayer* Game::FindPlayer(int _slot)
@@ -40,11 +43,27 @@ tPlayer* Game::FindPlayer(int _slot)
 	return m_arrPlayer[_slot];
 }
 
+tPlayer* Game::FindPlayer(Session* _pSession)
+{
+	for (int i = 0; i < RoomSlotNum; i++)
+	{
+		if (m_arrPlayer[i] && m_arrPlayer[i]->socket == _pSession->GetSocket())
+			return m_arrPlayer[i];
+	}
+	return nullptr;
+}
+
 bool Game::RemovePlayer(int _slot)
 {
 	delete m_arrPlayer[_slot];
 	m_arrPlayer[_slot] = nullptr;
 	return true;
+}
+
+void Game::SetSkillType(int _slot, eSkillType _type)
+{
+	if(m_arrPlayer[_slot])
+		m_arrPlayer[_slot]->_eSkillType = _type;
 }
 
 bool Game::IsAllReady() const
@@ -94,8 +113,8 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 	{
 		if (pPlayer->xpos - 1 >= 0)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos] = nullptr;
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos - 1] = pPlayer;
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos - 1][pPlayer->slot] = pPlayer;
 			pPlayer->xpos -= 1;
 		}
 		else
@@ -105,14 +124,14 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 	{
 		if (pPlayer->xpos - 2 >= 0)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos] = nullptr;
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos - 2] = pPlayer;
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos - 2][pPlayer->slot] = pPlayer;
 			pPlayer->xpos -= 2;
 		}
 		else if (pPlayer->xpos - 1 >= 0)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos] = nullptr;
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos - 1] = pPlayer;
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos - 1][pPlayer->slot] = pPlayer;
 			pPlayer->xpos -= 1;
 			_type = eSkillType::LeftMove;
 		}
@@ -121,10 +140,10 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 	}
 	else if (_type == eSkillType::RightMove)
 	{
-		if (pPlayer->xpos + 1 < 5)
+		if (pPlayer->xpos + 1 < BoardWidth)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos] = nullptr;
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos + 1] = pPlayer;
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos + 1][pPlayer->slot] = pPlayer;
 			pPlayer->xpos += 1;
 		}
 		else
@@ -132,16 +151,16 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 	}
 	else if (_type == eSkillType::RightDoubleMove)
 	{
-		if (pPlayer->xpos + 2 < 5)
+		if (pPlayer->xpos + 2 < BoardWidth)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos] = nullptr;
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos + 2] = pPlayer;
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos + 2][pPlayer->slot] = pPlayer;
 			pPlayer->xpos += 2;
 		}
-		else if (pPlayer->xpos + 1 < 5)
+		else if (pPlayer->xpos + 1 < BoardWidth)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos] = nullptr;
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos + 1] = pPlayer;
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos + 1][pPlayer->slot] = pPlayer;
 			pPlayer->xpos += 1;
 			_type = eSkillType::RightMove;
 		}
@@ -152,8 +171,8 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 	{
 		if (pPlayer->ypos - 1 >= 0)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos] = nullptr;
-			m_arrBoard[pPlayer->ypos - 1][pPlayer->xpos] = pPlayer;
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
+			m_arrBoard[pPlayer->ypos - 1][pPlayer->xpos][pPlayer->slot] = pPlayer;
 			pPlayer->ypos -= 1;
 		}
 		else
@@ -161,10 +180,10 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 	}
 	else if (_type == eSkillType::DownMove)
 	{
-		if (pPlayer->ypos + 1 < 4)
+		if (pPlayer->ypos + 1 < BoardHeight)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos] = nullptr;
-			m_arrBoard[pPlayer->ypos + 1][pPlayer->xpos] = pPlayer;
+			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
+			m_arrBoard[pPlayer->ypos + 1][pPlayer->xpos][pPlayer->slot] = pPlayer;
 			pPlayer->ypos += 1;
 		}
 		else
@@ -173,12 +192,65 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 	return _type;
 }
 
+void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list)
+{
+	tPlayer* pPlayer = m_arrPlayer[_slot];
+	if (!pPlayer) return;
+
+	tPlayer* pCounterPlayer = nullptr;
+
+	const tSkill* skill = SkillManager::GetInst()->GetSkillCoordinateList(pPlayer->_eSkillType);
+	
+	std::list<std::pair<int, int>>::const_iterator iter = skill->listCoordniates.cbegin();
+	std::list<std::pair<int, int>>::const_iterator iterEnd = skill->listCoordniates.cend();
+
+	std::map<int, tPlayer*>::iterator boardIter;
+	std::map<int, tPlayer*>::iterator boardIterEnd;
+
+	int strikePower = skill->strikePower;
+
+	for (; iter != iterEnd; ++iter)
+	{
+		if (pPlayer->xpos + iter->first < 0) continue;
+		if (pPlayer->xpos + iter->first >= BoardWidth) continue;
+		if (pPlayer->ypos + iter->second < 0) continue;
+		if (pPlayer->ypos + iter->second >= BoardHeight) continue;
+		if (m_arrBoard[pPlayer->ypos + iter->second][pPlayer->xpos + iter->first].size() == 0) continue;
+
+		boardIter = m_arrBoard[pPlayer->ypos + iter->second][pPlayer->xpos + iter->first].begin();
+		boardIterEnd = m_arrBoard[pPlayer->ypos + iter->second][pPlayer->xpos + iter->first].end();
+
+		for (; boardIter != boardIterEnd; ++boardIter)
+		{
+			if (boardIter->second == pPlayer) continue;
+
+			pCounterPlayer = boardIter->second;
+			if (pCounterPlayer)
+			{
+				if (pCounterPlayer->_eSkillType == eSkillType::Shield)
+				{
+					pCounterPlayer->score += strikePower / 2;
+				}
+				_list.push_back(pCounterPlayer);
+			}
+		}
+	}
+}
+
 void Game::OnNextTurn()
 {
 	int curPlayerSlot = UpdateNextTurn();
 	if (curPlayerSlot == -1)
 	{
 		IncreaseCurTurn();
+
+		// 방어막의 경우 현재 한바퀴 돌때까지 유지됨. 다른 스킬의 경우 쓴 후 곧바로 None
+		for (int i = 0; i < RoomSlotNum; ++i)
+		{
+			if (m_arrPlayer[i])
+				m_arrPlayer[i]->_eSkillType = eSkillType::None;
+		}
+
 
 		char buffer[255];
 		ushort count = sizeof(ushort);

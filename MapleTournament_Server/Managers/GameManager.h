@@ -1,8 +1,10 @@
 #pragma once
 
 #include <map>
+#include <list>
 
 #include "../Defines.h"
+#include "../Setting.h"
 
 class Game;
 

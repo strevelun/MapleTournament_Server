@@ -5,7 +5,6 @@ GameManager* GameManager::m_pInst = nullptr;
 
 GameManager::GameManager()
 {
-
 }
 
 GameManager::~GameManager()
@@ -21,6 +20,8 @@ GameManager::~GameManager()
 
 bool GameManager::Init()
 {
+
+
 	return true;
 }
 

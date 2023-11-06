@@ -21,6 +21,7 @@ std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallb
 	{ ePacketType::C_GameOver, PacketHandler::C_GameOver },
 	{ ePacketType::C_LobbyInit, PacketHandler::C_LobbyInit },
 	{ ePacketType::C_Standby, PacketHandler::C_Standby },
+	{ ePacketType::C_CheckHit, PacketHandler::C_CheckHit },
 };
 
 Session::Session(SOCKET _socket) :

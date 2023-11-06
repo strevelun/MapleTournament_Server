@@ -600,6 +600,7 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
 		
 	const tMember* member = pRoom->GetMemberInfo(_pSession);
+	// pGame->SetSkillType(member->slotNumber, type);
 
 	if (type == eSkillType::LeftMove || type == eSkillType::LeftDoubleMove 
 		|| type == eSkillType::RightMove || type == eSkillType::RightDoubleMove
@@ -608,9 +609,9 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 		type = pGame->Move(member->slotNumber, type);
 		//if (type == eSkillType::None) return;
 	}
-	else if (type == eSkillType::AttackCloud)
+	else
 	{
-
+		pGame->SetSkillType(member->slotNumber, type);
 	}
 
 	char buffer[255];
@@ -728,4 +729,31 @@ void PacketHandler::C_Standby(Session* _pSession, char* _packet)
 		*(ushort*)buffer = count;
 		send(memberList[slot].pSession->GetSocket(), buffer, count, 0);
 	}
+}
+
+void PacketHandler::C_CheckHit(Session* _pSession, char* _packet)
+{
+	Room* pRoom = _pSession->GetRoom();
+	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
+	tPlayer* pPlayer = pGame->FindPlayer(_pSession);
+	
+	std::list<tPlayer*> hitPlayerList;
+	pGame->GetHitPlayerList(pPlayer->slot, hitPlayerList);
+
+	char playerSize = (char)hitPlayerList.size();
+
+	char buffer[255];
+	ushort count = sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_CheckHit;			count += sizeof(ushort);
+	*(char*)(buffer + count) = (char)playerSize;									count += sizeof(char);
+
+	// listHitPlayer에서 현재 eSkillType이 Shield인 애들은 type도 보내기
+	for (const auto& player : hitPlayerList)
+	{
+		*(char*)(buffer + count) = (char)player->slot;							count += sizeof(char);
+		*(char*)(buffer + count) = (char)player->score;							count += sizeof(char);
+		*(char*)(buffer + count) = (char)player->_eSkillType;			count += sizeof(char);
+	}
+	*(ushort*)buffer = count;
+	pGame->SendAll(buffer);
 }

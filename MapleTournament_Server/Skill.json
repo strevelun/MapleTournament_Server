@@ -1,0 +1,11 @@
+[
+  {
+    "name": "Attack0",
+    "coordinates": [
+      [ -1, 0 ],
+      [ 0, 0 ],
+      [ 1, 0 ]
+    ],
+    "strikePower":  2
+  }
+]

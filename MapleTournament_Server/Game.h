@@ -3,26 +3,33 @@
 #include <WinSock2.h>
 #include <array>
 #include <vector>
+#include <map>
+#include <list>
 
 #include "Setting.h"
+
+class Session;
 
 typedef struct _tPlayer
 {
 	SOCKET socket = 0;
 	bool ready = false;
 	bool standby = false;
-	int hp = 10;
+	int score = 0;
 	int slot = 0;
 	int xpos = 0, ypos = 0;
+	eSkillType _eSkillType = eSkillType::None;
 } tPlayer;
 
 class Game
 {
 public:
 	static constexpr int RoomSlotNum = 4;
+	static constexpr int BoardWidth = 5;
+	static constexpr int BoardHeight = 4;
 
 private:
-	std::array<std::array<tPlayer*, 5>, 4> m_arrBoard;
+	std::array<std::array<std::map<int, tPlayer*>, BoardWidth>, BoardHeight> m_arrBoard;
 	std::array<tPlayer*, RoomSlotNum> m_arrPlayer;
 
 	bool m_isEnd = false;
@@ -37,11 +44,14 @@ public:
 
 	void AddPlayer(tPlayer* _pPlayer);
 	tPlayer* FindPlayer(int _slot);
+	tPlayer* FindPlayer(Session* _pSession);
 	bool RemovePlayer(int _slot);
 
 
 	unsigned int GetCurTurn() const { return m_curTurn; }
 	int	GetCurPlayerSlot() const { return m_curPlayerSlot; }
+
+	void SetSkillType(int _slot, eSkillType _type);
 
 	void IncreaseCurTurn() { m_curTurn++; }
 	
@@ -55,6 +65,7 @@ public:
 
 public:
 	eSkillType Move(int _slot, eSkillType _type);// slot으로 플레이어 구분
+	void GetHitPlayerList(int _slot, std::list<tPlayer*>& _list);
 	void OnNextTurn();
 };
 
