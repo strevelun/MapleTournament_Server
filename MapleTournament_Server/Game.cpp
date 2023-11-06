@@ -59,8 +59,15 @@ bool Game::RemovePlayer(int _slot)
 
 void Game::SetSkillType(int _slot, eSkillType _type)
 {
-	if (_type == eSkillType::Attack0 && (_slot == 1 || _slot == 3))
-		_type = eSkillType::Attack0_Left;
+	if (_slot == 1 || _slot == 3)
+	{
+		switch (_type)
+		{
+		case eSkillType::Attack0:
+			_type = eSkillType::Attack0_Left;
+			break;
+		}
+	}
 
 	if(m_arrPlayer[_slot])
 		m_arrPlayer[_slot]->_eSkillType = _type;
