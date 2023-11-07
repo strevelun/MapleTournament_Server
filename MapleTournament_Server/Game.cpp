@@ -23,7 +23,7 @@ Game::~Game()
 
 void Game::Update()
 {
-	if (m_curTurn > GAME_MAX_TURN)
+	if (m_curTurn > GAME_MAX_ROUND)
 	{
 		OnGameOver();
 	}
@@ -55,6 +55,21 @@ bool Game::RemovePlayer(int _slot)
 	delete m_arrPlayer[_slot];
 	m_arrPlayer[_slot] = nullptr;
 	return true;
+}
+
+eSkillType Game::GetCurSkillType(int _slot) const
+{
+	if (_slot == 1 || _slot == 3)
+	{
+		switch (m_arrPlayer[_slot]->_eSkillType)
+		{
+		case eSkillType::Attack0_Left:
+			return eSkillType::Attack0;
+
+		}
+	}
+	else
+		return m_arrPlayer[_slot]->_eSkillType;
 }
 
 void Game::SetSkillType(int _slot, eSkillType _type)

@@ -90,8 +90,10 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 			{
 				int curPlayerSlot = pGame->GetCurPlayerSlot();
 
+		
 				*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateIngameUserLeave;				count += sizeof(ushort);
 				*(char*)(buffer + count) = (char)curPlayerSlot;					count += sizeof(char);
+				*(char*)(buffer + count) = (char)pGame->GetCurSkillType(curPlayerSlot);					count += sizeof(char);
 				*(ushort*)buffer = count;
 				pRoom->SendAll(buffer);
 
@@ -425,7 +427,7 @@ void PacketHandler::C_InGameReady(Session* _pSession, char* _packet)
 	{
 		if (member.pSession == nullptr) continue;
 
-		*(char*)(buffer + count) = member.slotNumber;		count += sizeof(char);
+		*(char*)(buffer + count) = (char)member.slotNumber;		count += sizeof(char);
 		*(char*)(buffer + count) = (char)member.characterChoice;			count += sizeof(char);
 		User* pUser = member.pSession->GetUser();
 		const wchar_t* nickname = pUser->GetNickname();
@@ -614,6 +616,7 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 		pGame->SetSkillType(member->slotNumber, type);
 	}
 
+	// 서버는 정확한 SkillType을 가진다.(왼쪽/오른쪽 여부)
 	char buffer[255];
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_Skill;			count += sizeof(ushort);

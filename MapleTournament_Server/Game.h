@@ -50,6 +50,7 @@ public:
 
 	unsigned int GetCurTurn() const { return m_curTurn; }
 	int	GetCurPlayerSlot() const { return m_curPlayerSlot; }
+	eSkillType GetCurSkillType(int _slot) const;
 
 	void SetSkillType(int _slot, eSkillType _type);
 

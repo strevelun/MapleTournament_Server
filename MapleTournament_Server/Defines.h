@@ -17,4 +17,4 @@ public: \
 		m_pInst = nullptr; \
 	} 
 
-#define GAME_MAX_TURN			2
+#define GAME_MAX_ROUND			5
