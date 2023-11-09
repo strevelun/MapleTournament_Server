@@ -244,6 +244,7 @@ void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list)
 			if (pCounterPlayer)
 			{
 				pCounterPlayer->score += strikePower;
+				pCounterPlayer->hp -= strikePower;
 				_list.push_back(pCounterPlayer);
 			}
 		}

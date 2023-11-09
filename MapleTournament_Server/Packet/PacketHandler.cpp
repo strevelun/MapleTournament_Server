@@ -3,7 +3,10 @@
 #include "../Managers/UserManager.h"
 #include "../Managers/RoomManager.h"
 #include "../Managers/GameManager.h"
+#include "../Managers/SkillManager.h"
 #include "../Game.h"
+#include "../Skill.h"
+#include "../SkillHeal.h"
 #include "../Network/Room.h"
 #include "../Network/User.h"
 #include "../Network/Session.h"
@@ -385,6 +388,9 @@ void PacketHandler::C_CheckRoomReady(Session* _pSession, char* _packet)
 void PacketHandler::C_UserRoomReady(Session* _pSession, char* _packet)
 {
 	Room* pRoom = _pSession->GetRoom();
+
+	if (pRoom->GetRoomState() == eRoomState::InGame) return;
+
 	const tMember* member = pRoom->GetMemberInfo(_pSession);
 	eMemberState state = member->_eState;
 	eMemberState changeState = eMemberState(3 - (int)state);
@@ -429,6 +435,9 @@ void PacketHandler::C_InGameReady(Session* _pSession, char* _packet)
 
 		*(char*)(buffer + count) = (char)member.slotNumber;		count += sizeof(char);
 		*(char*)(buffer + count) = (char)member.characterChoice;			count += sizeof(char);
+		*(char*)(buffer + count) = (char)HPMax;			count += sizeof(char);
+		*(char*)(buffer + count) = (char)MPMax;			count += sizeof(char);
+
 		User* pUser = member.pSession->GetUser();
 		const wchar_t* nickname = pUser->GetNickname();
 		memcpy(buffer + count, nickname, wcslen(nickname) * 2);				count += (ushort)wcslen(nickname) * 2;
@@ -600,26 +609,30 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 	if (!pRoom) return;
 	
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
+	tPlayer* pPlayer = pGame->FindPlayer(_pSession);
+	// 마나 소모시키고, 소모된 마나 패킷으로 전송
 		
-	const tMember* member = pRoom->GetMemberInfo(_pSession);
 	// pGame->SetSkillType(member->slotNumber, type);
 
 	char buffer[255];
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_Skill;			count += sizeof(ushort);
-	*(char*)(buffer + count) = member->slotNumber;						count += sizeof(char);
+	*(char*)(buffer + count) = (char)pPlayer->slot;						count += sizeof(char);
 	*(char*)(buffer + count) = (char)type;								count += sizeof(char);
 
 	if (type == eActionType::Move)
 	{
 		eMoveName name = eMoveName(*(char*)_packet);
-		name = pGame->Move(member->slotNumber, name);
+		name = pGame->Move(pPlayer->slot, name);
 		*(char*)(buffer + count) = (char)name;
 	}
 	else if(type == eActionType::Skill)
 	{
 		eSkillName name = eSkillName(*(char*)_packet);
-		pGame->SetSkillType(member->slotNumber, name);
+		const Skill* pSkill = SkillManager::GetInst()->GetSkill(name);
+		pPlayer->mana -= pSkill->GetMana();
+		pGame->SetSkillType(pPlayer->slot, name);
+		*(char*)(buffer + count) = (char)pPlayer->mana;			count += sizeof(char);
 		*(char*)(buffer + count) = (char)name;
 	}
 	count += sizeof(char);
@@ -755,9 +768,42 @@ void PacketHandler::C_CheckHit(Session* _pSession, char* _packet)
 	for (const auto& player : hitPlayerList)
 	{
 		*(char*)(buffer + count) = (char)player->slot;							count += sizeof(char);
-		*(char*)(buffer + count) = (char)player->score;							count += sizeof(char);
+		*(char*)(buffer + count) = (char)player->hp;							count += sizeof(char);
 		*(char*)(buffer + count) = (char)player->_eSkillName;			count += sizeof(char);
 		printf("C_CheckHit : %d, %d, %d\n", player->slot, player->score, (int)player->_eSkillName);
+	}
+	*(ushort*)buffer = count;
+	pGame->SendAll(buffer);
+}
+
+void PacketHandler::C_CheckHeal(Session* _pSession, char* _packet)
+{
+	Room* pRoom = _pSession->GetRoom();
+	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
+	tPlayer* pPlayer = pGame->FindPlayer(_pSession);
+	
+	const Skill* pSkill = SkillManager::GetInst()->GetSkill(eSkillName::Heal0); // 현재 단 한 개
+	const SkillHeal* pSkillHeal = static_cast<const SkillHeal*>(pSkill);
+
+
+	char buffer[255];
+	ushort count = sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateHeal;			count += sizeof(ushort);
+
+	int healPossible = 1;
+	if (pPlayer->mana >= MPMax)
+		healPossible = 0;
+	else
+	{
+		int result = pPlayer->mana + pSkillHeal->GetHeal();
+		pPlayer->mana = result < MPMax ? result : MPMax;
+	}
+
+	*(char*)(buffer + count) = (char)healPossible;		count += sizeof(char);
+	if (healPossible)
+	{
+		*(char*)(buffer + count) = (char)pPlayer->slot;							count += sizeof(char);
+		*(char*)(buffer + count) = (char)pPlayer->mana;		count += sizeof(char);
 	}
 	*(ushort*)buffer = count;
 	pGame->SendAll(buffer);

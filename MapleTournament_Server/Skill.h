@@ -13,5 +13,6 @@ protected:
 
 public:
 	eSkillType GetType() const { return m_eType; }
+	int GetMana() const { return m_mana; }
 };
 

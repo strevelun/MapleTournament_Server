@@ -10,6 +10,9 @@
 
 class Session;
 
+#define HPMax				20
+#define MPMax				10
+
 typedef struct _tPlayer
 {
 	SOCKET socket = 0;
@@ -17,8 +20,8 @@ typedef struct _tPlayer
 	bool standby = false;
 	int score = 0; // ¶§¸° È½¼ö
 	int slot = 0;
-	int hp = 0;
-	int mana = 0;
+	int hp = 20;
+	int mana = 10;
 	int xpos = 0, ypos = 0;
 	eSkillName _eSkillName = eSkillName::None;
 } tPlayer;

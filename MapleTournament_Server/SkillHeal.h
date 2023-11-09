@@ -12,5 +12,7 @@ private:
 public:
     SkillHeal(eSkillType _eType, int _mana);
     virtual ~SkillHeal();
+
+    int GetHeal() const { return m_heal; }
 };
 
