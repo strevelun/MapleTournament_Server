@@ -25,7 +25,8 @@ Game::~Game()
 
 void Game::Update()
 {
-	if (m_curTurn > GAME_MAX_ROUND)
+	int count = CountAlivePlayer();
+	if (m_curTurn > GAME_MAX_ROUND || count  <= 1)
 	{
 		OnGameOver();
 	}
@@ -57,6 +58,15 @@ bool Game::RemovePlayer(int _slot)
 	delete m_arrPlayer[_slot];
 	m_arrPlayer[_slot] = nullptr;
 	return true;
+}
+
+int Game::CountAlivePlayer()
+{
+	int count = 0;
+	for (int i = 0; i < RoomSlotNum; i++)
+		if (m_arrPlayer[i] && m_arrPlayer[i]->alive == true)
+			++count;
+	return count;
 }
 
 eSkillName Game::GetCurSkillType(int _slot) const
@@ -95,7 +105,7 @@ int Game::UpdateNextTurn()
 			m_curPlayerSlot = -1;
 			break;
 		}
-	} while (m_arrPlayer[++m_curPlayerSlot] == nullptr);
+	} while (m_arrPlayer[++m_curPlayerSlot] == nullptr || m_arrPlayer[m_curPlayerSlot]->alive == false);
 
 	return m_curPlayerSlot;
 }

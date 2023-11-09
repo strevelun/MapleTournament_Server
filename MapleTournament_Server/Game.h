@@ -23,6 +23,7 @@ typedef struct _tPlayer
 	int hp = 20;
 	int mana = 10;
 	int xpos = 0, ypos = 0;
+	bool alive = true;
 	eSkillName _eSkillName = eSkillName::None;
 } tPlayer;
 
@@ -52,6 +53,7 @@ public:
 	tPlayer* FindPlayer(Session* _pSession);
 	bool RemovePlayer(int _slot);
 
+	int CountAlivePlayer();
 
 	unsigned int GetCurTurn() const { return m_curTurn; }
 	int	GetCurPlayerSlot() const { return m_curPlayerSlot; }

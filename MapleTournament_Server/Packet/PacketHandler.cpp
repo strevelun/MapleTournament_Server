@@ -740,6 +740,7 @@ void PacketHandler::C_Standby(Session* _pSession, char* _packet)
 	{
 		int slot = pGame->UpdateNextTurn();
 
+		// S_UpdateTurn은 현재 차례인 유저에게 스킬을 보내서 쓰게 만든다.
 		char buffer[255];
 		ushort count = sizeof(ushort);
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
@@ -767,6 +768,12 @@ void PacketHandler::C_CheckHit(Session* _pSession, char* _packet)
 	// listHitPlayer에서 현재 eSkillType이 Shield인 애들은 type도 보내기
 	for (const auto& player : hitPlayerList)
 	{
+		if (player->hp <= 0)
+		{
+			player->alive = false;
+			player->hp = 0;
+		}
+
 		*(char*)(buffer + count) = (char)player->slot;							count += sizeof(char);
 		*(char*)(buffer + count) = (char)player->hp;							count += sizeof(char);
 		*(char*)(buffer + count) = (char)player->_eSkillName;			count += sizeof(char);
