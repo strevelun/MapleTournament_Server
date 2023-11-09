@@ -5,6 +5,8 @@
 #include "Managers/SessionManager.h"
 #include "Network/Session.h"
 #include "Network/User.h"
+#include "Skill.h"
+#include "SkillAttack.h"
 
 typedef unsigned short ushort;
 
@@ -57,35 +59,15 @@ bool Game::RemovePlayer(int _slot)
 	return true;
 }
 
-eSkillType Game::GetCurSkillType(int _slot) const
+eSkillName Game::GetCurSkillType(int _slot) const
 {
-	if (_slot == 1 || _slot == 3)
-	{
-		switch (m_arrPlayer[_slot]->_eSkillType)
-		{
-		case eSkillType::Attack0_Left:
-			return eSkillType::Attack0;
-
-		}
-	}
-	else
-		return m_arrPlayer[_slot]->_eSkillType;
+	return m_arrPlayer[_slot]->_eSkillName;
 }
 
-void Game::SetSkillType(int _slot, eSkillType _type)
+void Game::SetSkillType(int _slot, eSkillName _eName)
 {
-	if (_slot == 1 || _slot == 3)
-	{
-		switch (_type)
-		{
-		case eSkillType::Attack0:
-			_type = eSkillType::Attack0_Left;
-			break;
-		}
-	}
-
 	if(m_arrPlayer[_slot])
-		m_arrPlayer[_slot]->_eSkillType = _type;
+		m_arrPlayer[_slot]->_eSkillName = _eName;
 }
 
 bool Game::IsAllReady() const
@@ -126,12 +108,12 @@ void Game::SendAll(char* _buffer)
 
 }
 
-eSkillType Game::Move(int _slot, eSkillType _type)
+eMoveName Game::Move(int _slot, eMoveName _name)
 {
 	tPlayer* pPlayer = FindPlayer(_slot);
-	if (!pPlayer) return eSkillType::None; 
+	if (!pPlayer) return eMoveName::None;
 
-	if (_type == eSkillType::LeftMove)
+	if (_name == eMoveName::LeftMove)
 	{
 		if (pPlayer->xpos - 1 >= 0)
 		{
@@ -140,9 +122,9 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 			pPlayer->xpos -= 1;
 		}
 		else
-			return eSkillType::None;
+			return eMoveName::None;
 	}
-	else if (_type == eSkillType::LeftDoubleMove)
+	else if (_name == eMoveName::LeftDoubleMove)
 	{
 		if (pPlayer->xpos - 2 >= 0)
 		{
@@ -155,12 +137,12 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
 			m_arrBoard[pPlayer->ypos][pPlayer->xpos - 1][pPlayer->slot] = pPlayer;
 			pPlayer->xpos -= 1;
-			_type = eSkillType::LeftMove;
+			_name = eMoveName::LeftMove;
 		}
 		else
-			return eSkillType::None;
+			return eMoveName::None;
 	}
-	else if (_type == eSkillType::RightMove)
+	else if (_name == eMoveName::RightMove)
 	{
 		if (pPlayer->xpos + 1 < BoardWidth)
 		{
@@ -169,9 +151,9 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 			pPlayer->xpos += 1;
 		}
 		else
-			return eSkillType::None;
+			return eMoveName::None;
 	}
-	else if (_type == eSkillType::RightDoubleMove)
+	else if (_name == eMoveName::RightDoubleMove)
 	{
 		if (pPlayer->xpos + 2 < BoardWidth)
 		{
@@ -184,12 +166,12 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
 			m_arrBoard[pPlayer->ypos][pPlayer->xpos + 1][pPlayer->slot] = pPlayer;
 			pPlayer->xpos += 1;
-			_type = eSkillType::RightMove;
+			_name = eMoveName::RightMove;
 		}
 		else
-			return eSkillType::None;
+			return eMoveName::None;
 	}
-	else if (_type == eSkillType::UpMove)
+	else if (_name == eMoveName::UpMove)
 	{
 		if (pPlayer->ypos - 1 >= 0)
 		{
@@ -198,9 +180,9 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 			pPlayer->ypos -= 1;
 		}
 		else
-			return eSkillType::None;
+			return eMoveName::None;
 	}
-	else if (_type == eSkillType::DownMove)
+	else if (_name == eMoveName::DownMove)
 	{
 		if (pPlayer->ypos + 1 < BoardHeight)
 		{
@@ -209,9 +191,9 @@ eSkillType Game::Move(int _slot, eSkillType _type)
 			pPlayer->ypos += 1;
 		}
 		else
-			return eSkillType::None;
+			return eMoveName::None;
 	}
-	return _type;
+	return _name;
 }
 
 void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list)
@@ -221,15 +203,27 @@ void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list)
 
 	tPlayer* pCounterPlayer = nullptr;
 
-	const tSkill* skill = SkillManager::GetInst()->GetSkillCoordinateList(pPlayer->_eSkillType);
-	
-	std::list<std::pair<int, int>>::const_iterator iter = skill->listCoordniates.cbegin();
-	std::list<std::pair<int, int>>::const_iterator iterEnd = skill->listCoordniates.cend();
+	const Skill* pSkill = SkillManager::GetInst()->GetSkill(pPlayer->_eSkillName);
+	if (pSkill->GetType() != eSkillType::Attack) return;
+
+	const SkillAttack* pSkillAttack = static_cast<const SkillAttack*>(pSkill);
+
+	if (_slot == 1 || _slot == 3)
+		if (pSkillAttack->IsInversed())
+		{
+			pSkill = SkillManager::GetInst()->GetSkill(eSkillName(int(pPlayer->_eSkillName) + 1));
+			pSkillAttack = static_cast<const SkillAttack*>(pSkill);
+		}
+
+	const std::list<std::pair<int, int>>& listCoordinates = pSkillAttack->GetListCoordinates();
+
+	std::list<std::pair<int, int>>::const_iterator iter = listCoordinates.cbegin();
+	std::list<std::pair<int, int>>::const_iterator iterEnd = listCoordinates.cend();
 
 	std::map<int, tPlayer*>::iterator boardIter;
 	std::map<int, tPlayer*>::iterator boardIterEnd;
 
-	int strikePower = skill->strikePower;
+	int strikePower = pSkillAttack->GetStrikePower();
 
 	for (; iter != iterEnd; ++iter)
 	{
@@ -249,10 +243,7 @@ void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list)
 			pCounterPlayer = boardIter->second;
 			if (pCounterPlayer)
 			{
-				if (pCounterPlayer->_eSkillType == eSkillType::Shield)
-					pCounterPlayer->score += strikePower / 2;
-				else
-					pCounterPlayer->score += strikePower;
+				pCounterPlayer->score += strikePower;
 				_list.push_back(pCounterPlayer);
 			}
 		}
@@ -270,7 +261,7 @@ void Game::OnNextTurn()
 		for (int i = 0; i < RoomSlotNum; ++i)
 		{
 			if (m_arrPlayer[i])
-				m_arrPlayer[i]->_eSkillType = eSkillType::None;
+				m_arrPlayer[i]->_eSkillName = eSkillName::None;
 		}
 
 		char buffer[255];

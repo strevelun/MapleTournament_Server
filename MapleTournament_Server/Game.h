@@ -15,10 +15,12 @@ typedef struct _tPlayer
 	SOCKET socket = 0;
 	bool ready = false;
 	bool standby = false;
-	int score = 0;
+	int score = 0; // 때린 횟수
 	int slot = 0;
+	int hp = 0;
+	int mana = 0;
 	int xpos = 0, ypos = 0;
-	eSkillType _eSkillType = eSkillType::None;
+	eSkillName _eSkillName = eSkillName::None;
 } tPlayer;
 
 class Game
@@ -50,9 +52,9 @@ public:
 
 	unsigned int GetCurTurn() const { return m_curTurn; }
 	int	GetCurPlayerSlot() const { return m_curPlayerSlot; }
-	eSkillType GetCurSkillType(int _slot) const;
+	eSkillName GetCurSkillType(int _slot) const;
 
-	void SetSkillType(int _slot, eSkillType _type);
+	void SetSkillType(int _slot, eSkillName _eName);
 
 	void IncreaseCurTurn() { m_curTurn++; }
 	
@@ -65,7 +67,7 @@ public:
 	void SendAll(char* _buffer);
 
 public:
-	eSkillType Move(int _slot, eSkillType _type);// slot으로 플레이어 구분
+	eMoveName Move(int _slot, eMoveName _name);// slot으로 플레이어 구분
 	void GetHitPlayerList(int _slot, std::list<tPlayer*>& _list);
 	void OnNextTurn();
 

@@ -146,6 +146,9 @@
     <ClCompile Include="Network\User.cpp" />
     <ClCompile Include="Packet\PacketHandler.cpp" />
     <ClCompile Include="ServerApp.cpp" />
+    <ClCompile Include="Skill.cpp" />
+    <ClCompile Include="SkillAttack.cpp" />
+    <ClCompile Include="SkillHeal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dist\json\json-forwards.h" />
@@ -165,6 +168,9 @@
     <ClInclude Include="Packet\PacketHandler.h" />
     <ClInclude Include="ServerApp.h" />
     <ClInclude Include="Setting.h" />
+    <ClInclude Include="Skill.h" />
+    <ClInclude Include="SkillAttack.h" />
+    <ClInclude Include="SkillHeal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

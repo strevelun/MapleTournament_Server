@@ -6,25 +6,29 @@
 #include <string>
 #include <map>
 #include <list>
+#include <json/json.h>
 
-typedef struct _tSkill
-{
-	std::list<std::pair<int, int>> listCoordniates;
-	int strikePower = 0;
-	int mp = 0;
-} tSkill;
+class Skill;
 
 class SkillManager
 {
 private:
-	std::map<eSkillType, tSkill> m_mapSkill;
+	std::map<eSkillName, Skill*> m_mapSkill;
 
 public:
 	bool Init();
-	const tSkill* GetSkillCoordinateList(eSkillType _type) const;
+	const Skill* GetSkill(eSkillName _type) const;
 
 private:
-	eSkillType GetSkillType(const std::string& name);
+	eSkillName GetSkillName(const std::string& _name);
+	eSkillType GetSkillType(const std::string& _name);
+
+	bool CheckKeyExistsCommon(const Json::Value& _elem, int _i);
+	bool CheckKeyConvertibleCommon(const Json::Value& _elem, int _i);
+	bool CheckKeyExistsAttack(const Json::Value& _elem, int _i);
+	bool CheckKeyConvertibleAttack(const Json::Value& _elem, int _i);
+	bool CheckKeyExistsHeal(const Json::Value& _elem, int _i);
+	bool CheckKeyConvertibleHeal(const Json::Value& _elem, int _i);
 
 	SINGLETON(SkillManager)
 };

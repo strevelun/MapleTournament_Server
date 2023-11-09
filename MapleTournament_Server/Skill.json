@@ -1,20 +1,72 @@
 [
   {
+    "type": "Attack",
     "name": "Attack0",
+    "mana": 2,
     "coordinates": [
       [ 0, 0 ],
       [ 1, 0 ],
       [ 2, 0 ]
     ],
-    "strikePower": 2
+    "strikePower": 5,
+    "inversed": true
   },
   {
+    "type": "Attack",
     "name": "Attack0_Left",
+    "mana": 2,
     "coordinates": [
       [ 0, 0 ],
       [ -1, 0 ],
       [ -2, 0 ]
     ],
-    "strikePower": 2
+    "strikePower": 5,
+    "inversed": true
+  },
+  {
+    "type": "Attack",
+    "name": "Attack1",
+    "mana": 1,
+    "coordinates": [
+      [ -1, -1 ],
+      [ 0, -1 ],
+      [ 1, -1 ],
+      [ -1, 0 ],
+      [ 0, -0 ],
+      [ 1, 0 ],
+      [ -1, 1 ],
+      [ 0, 1 ],
+      [ 1, 1 ]
+    ],
+    "strikePower": 2,
+    "inversed": false
+  },
+  {
+    "type": "Attack",
+    "name": "Attack2",
+    "mana": 2,
+    "coordinates": [
+      [ 0, -1 ],
+      [ 0, 0 ],
+      [ 0, 1 ]
+    ],
+    "strikePower": 5,
+    "inversed": false
+  },
+  {
+    "type": "Attack",
+    "name": "Attack3",
+    "mana": 5,
+    "coordinates": [
+      [ 0, 0 ]
+    ],
+    "strikePower": 10,
+    "inversed": false
+  },
+  {
+    "type": "Heal",
+    "name": "Heal0",
+    "mana": 0,
+    "heal": 2
   }
 ]

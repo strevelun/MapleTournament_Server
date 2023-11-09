@@ -595,7 +595,7 @@ void PacketHandler::C_UpdateUserSlot(Session* _pSession, char* _packet)
 
 void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 {
-	eSkillType type = eSkillType(*(char*)_packet);				_packet += sizeof(char);
+	eActionType type = eActionType(*(char*)_packet);				_packet += sizeof(char);
 	Room* pRoom = _pSession->GetRoom();
 	if (!pRoom) return;
 	
@@ -604,24 +604,25 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 	const tMember* member = pRoom->GetMemberInfo(_pSession);
 	// pGame->SetSkillType(member->slotNumber, type);
 
-	if (type == eSkillType::LeftMove || type == eSkillType::LeftDoubleMove 
-		|| type == eSkillType::RightMove || type == eSkillType::RightDoubleMove
-		|| type == eSkillType::UpMove || type == eSkillType::DownMove)
-	{
-		type = pGame->Move(member->slotNumber, type);
-		//if (type == eSkillType::None) return;
-	}
-	else
-	{
-		pGame->SetSkillType(member->slotNumber, type);
-	}
-
-	// 서버는 정확한 SkillType을 가진다.(왼쪽/오른쪽 여부)
 	char buffer[255];
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_Skill;			count += sizeof(ushort);
 	*(char*)(buffer + count) = member->slotNumber;						count += sizeof(char);
 	*(char*)(buffer + count) = (char)type;								count += sizeof(char);
+
+	if (type == eActionType::Move)
+	{
+		eMoveName name = eMoveName(*(char*)_packet);
+		name = pGame->Move(member->slotNumber, name);
+		*(char*)(buffer + count) = (char)name;
+	}
+	else if(type == eActionType::Skill)
+	{
+		eSkillName name = eSkillName(*(char*)_packet);
+		pGame->SetSkillType(member->slotNumber, name);
+		*(char*)(buffer + count) = (char)name;
+	}
+	count += sizeof(char);
 	*(ushort*)buffer = count;
 	pRoom->SendAll(buffer);
 
@@ -755,7 +756,8 @@ void PacketHandler::C_CheckHit(Session* _pSession, char* _packet)
 	{
 		*(char*)(buffer + count) = (char)player->slot;							count += sizeof(char);
 		*(char*)(buffer + count) = (char)player->score;							count += sizeof(char);
-		*(char*)(buffer + count) = (char)player->_eSkillType;			count += sizeof(char);
+		*(char*)(buffer + count) = (char)player->_eSkillName;			count += sizeof(char);
+		printf("C_CheckHit : %d, %d, %d\n", player->slot, player->score, (int)player->_eSkillName);
 	}
 	*(ushort*)buffer = count;
 	pGame->SendAll(buffer);

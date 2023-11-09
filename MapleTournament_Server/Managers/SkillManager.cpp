@@ -1,5 +1,7 @@
 #include "SkillManager.h"
-#include <json/json.h>
+#include "../Skill.h"
+#include "../SkillAttack.h"
+#include "../SkillHeal.h"
 
 #include <fstream>
 
@@ -22,7 +24,7 @@ bool SkillManager::Init()
     {
         printf("Skill.json 파일 열기 실패!\n");
         return false;
-    }
+    } 
 
     Json::Value jsonData;
     Json::Reader reader;
@@ -33,72 +35,187 @@ bool SkillManager::Init()
         return false;
     }
 
+    Skill* pSkill = nullptr;
+    int i = 0;
+
     for (const auto& elem : jsonData)
     {
-        if (!elem.isMember("name"))
+        if (!CheckKeyExistsCommon(elem, i)) return false;
+        if (!CheckKeyConvertibleCommon(elem, i)) return false;
+
+        eSkillType type = GetSkillType(elem["type"].asString());
+        if (type == eSkillType::None)
         {
-            printf("\"name\"키가 없습니다.\n");
+            printf("%d : 알 수 없는 스킬 타입\n", i);
             return false;
         }
-        if (!elem.isMember("name"))
+      
+        eSkillName name = GetSkillName(elem["name"].asString());
+        if (name == eSkillName::None)
         {
-            printf("\"coordinates\"키가 없습니다.\n");
+            printf("%d : 알 수 없는 스킬 이름\n", i);
             return false;
         }
-        if (!elem.isMember("strikePower"))
+       
+        int mana = elem["mana"].asInt();
+
+        if (type == eSkillType::Attack)
         {
-            printf("\"strikePower\"키가 없습니다.\n");
-            return false;
+            if (!CheckKeyExistsAttack(elem, i)) return false;
+            if (!CheckKeyConvertibleAttack(elem, i)) return false;
+
+            pSkill = new SkillAttack(type, mana);
+
+            for (const auto& c : elem["coordinates"])
+                ((SkillAttack*)pSkill)->m_listCoordinates.push_back({ c[0].asInt(), c[1].asInt() });
+
+            ((SkillAttack*)pSkill)->m_strikePower = elem["strikePower"].asInt();
+            ((SkillAttack*)pSkill)->m_inversed = elem["inversed"].asBool();
+        }
+        else if (type == eSkillType::Heal)
+        {
+            if (!CheckKeyExistsHeal(elem, i)) return false;
+            if (!CheckKeyConvertibleHeal(elem, i)) return false;
+
+            pSkill = new SkillHeal(type, mana);
+
+            ((SkillHeal*)pSkill)->m_heal = elem["heal"].asInt();
         }
 
-        if (!elem["name"].isConvertibleTo(Json::stringValue))
-        {
-            printf("name키의 값을 string형으로 변환 불가능\n");
-            return false;
-        }
-        std::string name = elem["name"].asString();
-        eSkillType skillType = GetSkillType(name);
-        if (skillType == eSkillType::None)
-        {
-            printf("알 수 없는 스킬 타입\n");
-            return false;
-        }
-
-        tSkill skill;
-        for (const auto& c : elem["coordinates"])
-        {
-            if (!c[0].isConvertibleTo(Json::intValue) || !c[1].isConvertibleTo(Json::intValue))
-            {
-                printf("coordinates키의 값을 int형으로 변환 불가능\n");
-                return false;
-            }
-            skill.listCoordniates.push_back({c[0].asInt(), c[1].asInt()});
-        }
-
-        if (!elem["strikePower"].isConvertibleTo(Json::intValue))
-        {
-            printf("strikePower키의 값을 int형으로 변환 불가능\n");
-            return false;
-        }
-        skill.strikePower = elem["strikePower"].asInt();
-
-        m_mapSkill[skillType] = skill;
+        m_mapSkill[name] = pSkill;
+        ++i;
     }
 	return true;
 }
 
-const tSkill* SkillManager::GetSkillCoordinateList(eSkillType _type) const
+const Skill* SkillManager::GetSkill(eSkillName _type) const
 {
-    std::map<eSkillType, tSkill>::const_iterator iter = m_mapSkill.find(_type);
+    std::map<eSkillName, Skill*>::const_iterator iter = m_mapSkill.find(_type);
     if (iter == m_mapSkill.end()) return nullptr;
 
-    return &iter->second;
+    return iter->second;
 }
 
-eSkillType SkillManager::GetSkillType(const std::string& name)
+eSkillName SkillManager::GetSkillName(const std::string& _name)
 {
-	if (name == "Attack0") return eSkillType::Attack0;
-	if (name == "Attack0_Left") return eSkillType::Attack0_Left;
+	if (_name == "Attack0") return eSkillName::Attack0;
+	if (_name == "Attack0_Left") return eSkillName::Attack0_Left;
+	if (_name == "Attack1") return eSkillName::Attack1;
+	if (_name == "Attack2") return eSkillName::Attack2;
+	if (_name == "Attack3") return eSkillName::Attack3;
+	if (_name == "Heal0") return eSkillName::Heal0;
+
+    return eSkillName::None;
+}
+
+eSkillType SkillManager::GetSkillType(const std::string& _name)
+{
+    if (_name == "Attack") return eSkillType::Attack;
+    if (_name == "Heal") return eSkillType::Heal;
 
     return eSkillType::None;
+}
+
+bool SkillManager::CheckKeyExistsCommon(const Json::Value& _elem, int _i)
+{
+    if (!_elem.isMember("type"))
+    {
+        printf("%d : \"type\"키가 없습니다.\n", _i);
+        return false;
+    }
+    if (!_elem.isMember("name"))
+    {
+        printf("%d : \"name\"키가 없습니다.\n", _i);
+        return false;
+    }
+    if (!_elem.isMember("mana"))
+    {
+        printf("%d : \"mana\"키가 없습니다.\n", _i);
+        return false;
+    }
+    return true;
+}
+
+bool SkillManager::CheckKeyConvertibleCommon(const Json::Value& _elem, int _i)
+{
+    if (!_elem["type"].isConvertibleTo(Json::stringValue))
+    {
+        printf("%d : type키의 값을 string형으로 변환 불가능\n", _i);
+        return false;
+    }
+    if (!_elem["name"].isConvertibleTo(Json::stringValue))
+    {
+        printf("%d : name키의 값을 string형으로 변환 불가능\n", _i);
+        return false;
+    }
+    if (!_elem["mana"].isConvertibleTo(Json::intValue))
+    {
+        printf("%d : mana키의 값을 int형으로 변환 불가능\n", _i);
+        return false;
+    }
+    return true;
+}
+
+bool SkillManager::CheckKeyExistsAttack(const Json::Value& _elem, int _i)
+{
+    if (!_elem.isMember("coordinates"))
+    {
+        printf("%d : \"coordinates\"키가 없습니다.\n", _i);
+        return false;
+    }
+    if (!_elem.isMember("strikePower"))
+    {
+        printf("%d : \"strikePower\"키가 없습니다.\n", _i);
+        return false;
+    }
+    if (!_elem.isMember("inversed"))
+    {
+        printf("%d : \"inversed\"키가 없습니다.\n", _i);
+        return false;
+    }
+    return true;
+}
+
+bool SkillManager::CheckKeyConvertibleAttack(const Json::Value& _elem, int _i)
+{
+    for (const auto& c : _elem["coordinates"])
+    {
+        if (!c[0].isConvertibleTo(Json::intValue) || !c[1].isConvertibleTo(Json::intValue))
+        {
+            printf("%d : coordinates키의 값을 int형으로 변환 불가능\n", _i);
+            return false;
+        }
+    }
+    if (!_elem["strikePower"].isConvertibleTo(Json::intValue))
+    {
+        printf("%d : strikePower키의 값을 int형으로 변환 불가능\n", _i);
+        return false;
+    }
+    if (!_elem["inversed"].isConvertibleTo(Json::booleanValue))
+    {
+        printf("%d : inversed키의 값을 bool형으로 변환 불가능\n", _i);
+        return false;
+    }
+
+    return true;
+}
+
+bool SkillManager::CheckKeyExistsHeal(const Json::Value& _elem, int _i)
+{
+    if (!_elem.isMember("heal"))
+    {
+        printf("%d : \"heal\"키가 없습니다.\n", _i);
+        return false;
+    }
+    return true;
+}
+
+bool SkillManager::CheckKeyConvertibleHeal(const Json::Value& _elem, int _i)
+{
+    if (!_elem["heal"].isConvertibleTo(Json::intValue))
+    {
+        printf("%d : heal키의 값을 int형으로 변환 불가능\n", _i);
+        return false;
+    }
+    return true;
 }

@@ -62,20 +62,45 @@ enum class eSessionState
 	InGame
 };
 
-enum class eSkillType
+enum class eActionType
 {
 	None,
-	Shield,
-	Attack0,
-	Attack0_Left,
+	Skill,
+	Move,
+	Hit,
+	NumOfActions,
+};
+
+enum class eMoveName
+{
+	None,
 	LeftMove,
 	LeftDoubleMove,
 	RightMove,
 	RightDoubleMove,
 	UpMove,
 	DownMove,
-	Hit,
+	NumOfMoves,
+};
+
+enum class eSkillName
+{
+	None,
+	Heal0,
+	Attack0,
+	Attack0_Left,
+	Attack1,
+	Attack2,
+	Attack3,
 	NumOfSkills,
+};
+
+enum class eSkillType
+{
+	None,
+	Attack,
+	Heal,
+	NumOfSkillType
 };
 
 #endif
