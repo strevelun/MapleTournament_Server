@@ -12,6 +12,8 @@ typedef unsigned short ushort;
 
 Game::Game()
 {
+	srand((unsigned int)time(0));
+
 	for (int i = 0; i < RoomSlotNum; i++)
 		m_arrPlayer[i] = nullptr;
 }
@@ -30,6 +32,8 @@ void Game::Update()
 	{
 		OnGameOver();
 	}
+
+	UpdatePortal();
 }
 
 void Game::AddPlayer(tPlayer* _pPlayer)
@@ -80,6 +84,15 @@ void Game::SetSkillType(int _slot, eSkillName _eName)
 		m_arrPlayer[_slot]->_eSkillName = _eName;
 }
 
+void Game::SetPortalPosition(int _xpos, int _ypos)
+{
+	if (_xpos < -1 || _xpos >= BoardWidth) return;
+	if (_ypos < -1 || _ypos >= BoardHeight) return;
+
+	m_portalPosition.first = _xpos;
+	m_portalPosition.second = _ypos;
+}
+
 bool Game::IsAllReady() const
 {
 	for (int i = 0; i < RoomSlotNum; i++)
@@ -96,6 +109,29 @@ bool Game::IsAllStandby() const
 	return true;
 }
 
+void Game::CheckPortal(int _slot)
+{
+	if (m_arrPlayer[_slot]->xpos == m_portalPosition.first && m_arrPlayer[_slot]->ypos == m_portalPosition.second)
+	{
+		// 플레이어 랜덤 이동시키고 한번 더 턴을 줌. 그리고 포탈은 비활성화
+		// 서버에서 포탈 비활성화는 -1
+		int newXPos;
+		int newYPos;
+		do {
+			newXPos = rand() % BoardWidth;
+			newYPos = rand() % BoardHeight;
+		} while (m_arrPlayer[_slot]->xpos == newXPos && m_arrPlayer[_slot]->ypos == newYPos);
+		
+		m_arrPlayer[_slot]->xpos = newXPos;
+		m_arrPlayer[_slot]->ypos = newYPos;
+
+		m_arrPlayer[_slot]->waitForPortal = true;
+
+		m_portalPosition.first = -1;
+		m_portalPosition.second = -1;
+	}
+}
+
 int Game::UpdateNextTurn()
 {
 	do 
@@ -108,6 +144,27 @@ int Game::UpdateNextTurn()
 	} while (m_arrPlayer[++m_curPlayerSlot] == nullptr || m_arrPlayer[m_curPlayerSlot]->alive == false);
 
 	return m_curPlayerSlot;
+}
+
+void Game::UpdatePortal()
+{
+	if (m_isItTimeForPortalCreation)
+	{
+		do {
+			m_portalPosition.first = rand() % BoardWidth;
+			m_portalPosition.second = rand() % BoardHeight;
+		} while (m_arrBoard[m_portalPosition.second][m_portalPosition.first].size() >= 1);
+
+		char buffer[255];
+		ushort count = sizeof(ushort);
+		*(ushort*)(buffer + count) = (ushort)ePacketType::S_CreatePortal;			count += sizeof(ushort);
+		*(char*)(buffer + count) = (char)m_portalPosition.first;			count += sizeof(char);
+		*(char*)(buffer + count) = (char)m_portalPosition.second;			count += sizeof(char);
+		*(ushort*)buffer = count;
+		SendAll(buffer);
+
+		m_isItTimeForPortalCreation = false;
+	}
 }
 
 void Game::SendAll(char* _buffer)
@@ -267,6 +324,11 @@ void Game::OnNextTurn()
 	if (curPlayerSlot == -1)
 	{
 		IncreaseCurTurn();
+
+		if (m_curTurn > 1 && m_curTurn % 3 == 0)
+		{
+			m_isItTimeForPortalCreation = true;
+		}
 
 		// 방어막의 경우 현재 한바퀴 돌때까지 유지됨. 다른 스킬의 경우 쓴 후 곧바로 None
 		for (int i = 0; i < RoomSlotNum; ++i)

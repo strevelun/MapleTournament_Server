@@ -2,7 +2,7 @@
   {
     "type": "Attack",
     "name": "Attack0",
-    "mana": 2,
+    "mana": 3,
     "coordinates": [
       [ 0, 0 ],
       [ 1, 0 ],
@@ -14,7 +14,7 @@
   {
     "type": "Attack",
     "name": "Attack0_Left",
-    "mana": 2,
+    "mana": 3,
     "coordinates": [
       [ 0, 0 ],
       [ -1, 0 ],
@@ -26,7 +26,7 @@
   {
     "type": "Attack",
     "name": "Attack1",
-    "mana": 1,
+    "mana": 2,
     "coordinates": [
       [ -1, -1 ],
       [ 0, -1 ],
@@ -44,7 +44,7 @@
   {
     "type": "Attack",
     "name": "Attack2",
-    "mana": 2,
+    "mana": 3,
     "coordinates": [
       [ 0, -1 ],
       [ 0, 0 ],
@@ -56,7 +56,7 @@
   {
     "type": "Attack",
     "name": "Attack3",
-    "mana": 5,
+    "mana": 7,
     "coordinates": [
       [ 0, 0 ]
     ],

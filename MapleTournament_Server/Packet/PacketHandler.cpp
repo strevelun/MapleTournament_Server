@@ -614,6 +614,8 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 		
 	// pGame->SetSkillType(member->slotNumber, type);
 
+	// TODO : 코드 흐름 변경
+
 	char buffer[255];
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_Skill;			count += sizeof(ushort);
@@ -625,6 +627,11 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 		eMoveName name = eMoveName(*(char*)_packet);
 		name = pGame->Move(pPlayer->slot, name);
 		*(char*)(buffer + count) = (char)name;
+
+		if (name != eMoveName::None)
+		{
+			pGame->CheckPortal(pPlayer->slot);
+		}
 	}
 	else if(type == eActionType::Skill)
 	{
@@ -646,9 +653,35 @@ void PacketHandler::C_NextTurn(Session* _pSession, char* _packet)
 	Room* pRoom = _pSession->GetRoom();
 	if (!pRoom) return;
 
+
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
-	if(pGame)
+	if (pGame)
+	{
+		// 만약 포탈을 향해 이동하는 모션을 취한 후 보낸 NextTurn인 경우 
+		tPlayer* pPlayer = pGame->FindPlayer(_pSession);
+		if (pPlayer->waitForPortal)
+		{
+			char buffer[255];
+			ushort count = sizeof(ushort);
+			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
+			*(char*)(buffer + count) = (char)0;				count += sizeof(char);
+			*(ushort*)buffer = count;
+			send(pPlayer->socket, buffer, count, 0);
+
+			count = sizeof(ushort);
+			*(ushort*)(buffer + count) = (ushort)ePacketType::S_Teleport;			count += sizeof(ushort);
+			*(char*)(buffer + count) = (char)pPlayer->slot;			count += sizeof(char);
+			*(char*)(buffer + count) = (char)pPlayer->xpos;			count += sizeof(char);
+			*(char*)(buffer + count) = (char)pPlayer->ypos;			count += sizeof(char);
+			*(ushort*)buffer = count;
+			pGame->SendAll(buffer);
+
+			pPlayer->waitForPortal = false;
+			return;
+		}
+
 		pGame->OnNextTurn();
+	}
 }
 
 void PacketHandler::C_GameOver(Session* _pSession, char* _packet)
