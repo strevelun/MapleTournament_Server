@@ -744,6 +744,7 @@ void PacketHandler::C_Standby(Session* _pSession, char* _packet)
 		char buffer[255];
 		ushort count = sizeof(ushort);
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
+		*(char*)(buffer + count) = (char)0;				count += sizeof(char);
 		*(ushort*)buffer = count;
 		send(memberList[slot].pSession->GetSocket(), buffer, count, 0);
 	}

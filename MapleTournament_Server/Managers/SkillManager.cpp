@@ -96,6 +96,18 @@ const Skill* SkillManager::GetSkill(eSkillName _type) const
     return iter->second;
 }
 
+void SkillManager::GetSkillsNotAvailable(int _playerMP, std::list<eSkillName>& _listSkillName)
+{
+    std::map<eSkillName, Skill*>::const_iterator iter = m_mapSkill.cbegin();
+    std::map<eSkillName, Skill*>::const_iterator iterEnd = m_mapSkill.cend();
+
+    for (; iter != iterEnd; ++iter)
+    {
+        if (_playerMP < iter->second->GetMana())
+            _listSkillName.push_back(iter->first);
+    }
+}
+
 eSkillName SkillManager::GetSkillName(const std::string& _name)
 {
 	if (_name == "Attack0") return eSkillName::Attack0;

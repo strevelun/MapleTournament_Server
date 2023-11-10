@@ -18,6 +18,7 @@ private:
 public:
 	bool Init();
 	const Skill* GetSkill(eSkillName _type) const;
+	void GetSkillsNotAvailable(int _playerMP, std::list<eSkillName>& _listSkillName);
 
 private:
 	eSkillName GetSkillName(const std::string& _name);

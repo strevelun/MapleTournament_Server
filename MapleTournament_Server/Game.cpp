@@ -289,6 +289,13 @@ void Game::OnNextTurn()
 	char buffer[255];
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
+	std::list<eSkillName> skillNameList;
+	SkillManager::GetInst()->GetSkillsNotAvailable(pCurPlayer->mana, skillNameList);
+	*(char*)(buffer + count) = (char)skillNameList.size();				count += sizeof(char);
+	for (eSkillName name : skillNameList)
+	{
+		*(char*)(buffer + count) = (char)name;				count += sizeof(char);
+	}
 	*(ushort*)buffer = count;
 	send(pCurPlayer->socket, buffer, count, 0);
 }
