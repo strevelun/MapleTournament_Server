@@ -68,17 +68,18 @@ int Game::CountAlivePlayer()
 {
 	int count = 0;
 	for (int i = 0; i < RoomSlotNum; i++)
-		if (m_arrPlayer[i] && m_arrPlayer[i]->alive == true)
-			++count;
+	{
+		if (m_arrPlayer[i] && m_arrPlayer[i]->alive == true) ++count;
+	}
 	return count;
 }
 
-eSkillName Game::GetCurSkillType(int _slot) const
+eSkillName Game::GetCurSkillName(int _slot) const
 {
 	return m_arrPlayer[_slot]->_eSkillName;
 }
 
-void Game::SetSkillType(int _slot, eSkillName _eName)
+void Game::SetSkillName(int _slot, eSkillName _eName)
 {
 	if(m_arrPlayer[_slot])
 		m_arrPlayer[_slot]->_eSkillName = _eName;
@@ -263,7 +264,7 @@ eMoveName Game::Move(int _slot, eMoveName _name)
 	return _name;
 }
 
-void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list)
+void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list, std::list<tPlayer*>& _listDead)
 {
 	tPlayer* pPlayer = m_arrPlayer[_slot];
 	if (!pPlayer) return;
@@ -310,9 +311,19 @@ void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list)
 			pCounterPlayer = boardIter->second;
 			if (pCounterPlayer)
 			{
-				pCounterPlayer->score += strikePower;
-				pCounterPlayer->hp -= strikePower;
-				_list.push_back(pCounterPlayer);
+				if (pCounterPlayer->alive)
+				{
+					pPlayer->score += 1;
+					pCounterPlayer->hp -= strikePower;
+					if (pCounterPlayer->hp <= 0)
+					{
+						pCounterPlayer->alive = false;
+						pCounterPlayer->hp = 0;
+						_listDead.push_back(pCounterPlayer);
+					}
+					else
+						_list.push_back(pCounterPlayer);
+				}
 			}
 		}
 	}

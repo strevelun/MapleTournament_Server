@@ -91,16 +91,15 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 			Game* pGame = GameManager::GetInst()->FindGame(roomId); 
 			if (pGame)
 			{
-				int curPlayerSlot = pGame->GetCurPlayerSlot();
-
+				//int curPlayerSlot = pGame->GetCurPlayerSlot();
 		
 				*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateIngameUserLeave;				count += sizeof(ushort);
-				*(char*)(buffer + count) = (char)curPlayerSlot;					count += sizeof(char);
-				*(char*)(buffer + count) = (char)pGame->GetCurSkillType(curPlayerSlot);					count += sizeof(char);
+				*(char*)(buffer + count) = (char)pMember->slotNumber;					count += sizeof(char);
+				*(char*)(buffer + count) = (char)pGame->GetCurSkillName(pMember->slotNumber);					count += sizeof(char);
 				*(ushort*)buffer = count;
 				pRoom->SendAll(buffer);
 
-				if (curPlayerSlot == pMember->slotNumber)
+				if (pGame->GetCurPlayerSlot() == pMember->slotNumber)
 				{
 					pGame->OnNextTurn();
 
@@ -295,7 +294,7 @@ void PacketHandler::C_LeaveRoom(Session* _pSession, char* _packet)
 	{
 		pRoom->LeaveSession(_pSession);
 		const tMember* pNewOwner = pRoom->GetRoomOwner();
-		Session* newOwnerSession = pNewOwner->pSession;
+		Session* newOwnerSession = pNewOwner->pSession;	
 
 		count = sizeof(ushort);
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateRoomMemberLeave;				count += sizeof(ushort);
@@ -626,7 +625,7 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 	{
 		eMoveName name = eMoveName(*(char*)_packet);
 		name = pGame->Move(pPlayer->slot, name);
-		*(char*)(buffer + count) = (char)name;
+		*(char*)(buffer + count) = (char)name;							count += sizeof(char);
 
 		if (name != eMoveName::None)
 		{
@@ -638,11 +637,10 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 		eSkillName name = eSkillName(*(char*)_packet);
 		const Skill* pSkill = SkillManager::GetInst()->GetSkill(name);
 		pPlayer->mana -= pSkill->GetMana();
-		pGame->SetSkillType(pPlayer->slot, name);
+		pGame->SetSkillName(pPlayer->slot, name);
 		*(char*)(buffer + count) = (char)pPlayer->mana;			count += sizeof(char);
-		*(char*)(buffer + count) = (char)name;
+		*(char*)(buffer + count) = (char)name;						count += sizeof(char);
 	}
-	count += sizeof(char);
 	*(ushort*)buffer = count;
 	pRoom->SendAll(buffer);
 
@@ -789,8 +787,8 @@ void PacketHandler::C_CheckHit(Session* _pSession, char* _packet)
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
 	tPlayer* pPlayer = pGame->FindPlayer(_pSession);
 	
-	std::list<tPlayer*> hitPlayerList;
-	pGame->GetHitPlayerList(pPlayer->slot, hitPlayerList);
+	std::list<tPlayer*> hitPlayerList, deadPlayerList;
+	pGame->GetHitPlayerList(pPlayer->slot, hitPlayerList, deadPlayerList);
 
 	char playerSize = (char)hitPlayerList.size();
 
@@ -802,16 +800,17 @@ void PacketHandler::C_CheckHit(Session* _pSession, char* _packet)
 	// listHitPlayer에서 현재 eSkillType이 Shield인 애들은 type도 보내기
 	for (const auto& player : hitPlayerList)
 	{
-		if (player->hp <= 0)
-		{
-			player->alive = false;
-			player->hp = 0;
-		}
-
 		*(char*)(buffer + count) = (char)player->slot;							count += sizeof(char);
 		*(char*)(buffer + count) = (char)player->hp;							count += sizeof(char);
-		*(char*)(buffer + count) = (char)player->_eSkillName;			count += sizeof(char);
-		printf("C_CheckHit : %d, %d, %d\n", player->slot, player->score, (int)player->_eSkillName);
+	}
+
+	*(char*)(buffer + count) = (char)deadPlayerList.size();									count += sizeof(char);
+
+	// listHitPlayer에서 현재 eSkillType이 Shield인 애들은 type도 보내기
+	for (const auto& player : deadPlayerList)
+	{
+		*(char*)(buffer + count) = (char)player->slot;							count += sizeof(char);
+		//*(char*)(buffer + count) = (char)player->_eSkillName;			count += sizeof(char);
 	}
 	*(ushort*)buffer = count;
 	pGame->SendAll(buffer);

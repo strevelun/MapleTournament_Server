@@ -61,9 +61,9 @@ public:
 
 	unsigned int GetCurTurn() const { return m_curTurn; }
 	int	GetCurPlayerSlot() const { return m_curPlayerSlot; }
-	eSkillName GetCurSkillType(int _slot) const;
+	eSkillName GetCurSkillName(int _slot) const;
 
-	void SetSkillType(int _slot, eSkillName _eName);
+	void SetSkillName(int _slot, eSkillName _eName);
 	void SetPortalPosition(int _xpos, int _ypos);
 
 	void IncreaseCurTurn() { m_curTurn++; }
@@ -81,7 +81,7 @@ public:
 
 public:
 	eMoveName Move(int _slot, eMoveName _name);// slot으로 플레이어 구분
-	void GetHitPlayerList(int _slot, std::list<tPlayer*>& _list);
+	void GetHitPlayerList(int _slot, std::list<tPlayer*>& _list, std::list<tPlayer*>& _listDead);
 	void OnNextTurn();
 
 private:

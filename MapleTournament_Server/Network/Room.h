@@ -25,6 +25,23 @@ enum class eMemberState
 	Ready
 };
 
+/*
+* 
+class CUser
+{
+	private :
+		Session* pSession = nullptr;
+
+	struct stMember
+	{
+		eMemberType _eType = eMemberType::None;
+		eMemberState _eState = eMemberState::None;
+		int slotNumber = 0;
+		int characterChoice = 0;
+	} ;
+}
+*/
+
 typedef struct _tMember
 {
 	Session* pSession = nullptr; 

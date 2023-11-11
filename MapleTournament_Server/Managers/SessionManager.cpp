@@ -41,7 +41,7 @@ Session* SessionManager::FindSession(SOCKET _socket)
 	size_t size = m_vecSession.size();
 	for (u_int i = 0; i < size; i++)
 	{
-		if (m_vecSession.at(i)->GetSocket() == _socket) return m_vecSession[i];
+		if (m_vecSession[i]->GetSocket() == _socket) return m_vecSession[i];
 	}
 	return nullptr;
 }
