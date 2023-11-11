@@ -56,6 +56,7 @@ public:
 	tPlayer* FindPlayer(int _slot);
 	tPlayer* FindPlayer(Session* _pSession);
 	bool RemovePlayer(int _slot);
+	void RemovePlayerFromBoard(int _slot);
 
 	int CountAlivePlayer();
 

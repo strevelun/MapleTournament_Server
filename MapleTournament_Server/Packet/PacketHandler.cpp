@@ -808,11 +808,10 @@ void PacketHandler::C_CheckHit(Session* _pSession, char* _packet)
 
 	*(char*)(buffer + count) = (char)deadPlayerList.size();									count += sizeof(char);
 
-	// listHitPlayer에서 현재 eSkillType이 Shield인 애들은 type도 보내기
 	for (const auto& player : deadPlayerList)
 	{
 		*(char*)(buffer + count) = (char)player->slot;							count += sizeof(char);
-		//*(char*)(buffer + count) = (char)player->_eSkillName;			count += sizeof(char);
+		pGame->RemovePlayerFromBoard(player->slot);
 	}
 	*(ushort*)buffer = count;
 	pGame->SendAll(buffer);

@@ -59,9 +59,15 @@ tPlayer* Game::FindPlayer(Session* _pSession)
 
 bool Game::RemovePlayer(int _slot)
 {
+	RemovePlayerFromBoard(_slot);
 	delete m_arrPlayer[_slot];
 	m_arrPlayer[_slot] = nullptr;
 	return true;
+}
+
+void Game::RemovePlayerFromBoard(int _slot)
+{
+	m_arrBoard[m_arrPlayer[_slot]->ypos][m_arrPlayer[_slot]->xpos].erase(m_arrPlayer[_slot]->slot);
 }
 
 int Game::CountAlivePlayer()
