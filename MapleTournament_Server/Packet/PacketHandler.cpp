@@ -674,6 +674,8 @@ void PacketHandler::C_NextTurn(Session* _pSession, char* _packet)
 			*(ushort*)buffer = count;
 			pGame->SendAll(buffer);
 
+			printf("S_UpdateTurn : (%d, %d, %d)\n", pPlayer->slot, pPlayer->xpos, pPlayer->ypos);
+
 			pPlayer->waitForPortal = false;
 			return;
 		}
