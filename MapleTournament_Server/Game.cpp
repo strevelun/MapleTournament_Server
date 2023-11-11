@@ -319,7 +319,6 @@ void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list, std::list<tPl
 			{
 				if (pCounterPlayer->alive)
 				{
-					pPlayer->score += 1;
 					pCounterPlayer->hp -= strikePower;
 					if (pCounterPlayer->hp <= 0)
 					{
@@ -388,7 +387,7 @@ void Game::OnGameOver()
 		{
 			Session* pSsesion = SessionManager::GetInst()->FindSession(m_arrPlayer[i]->socket);
 			User* pUser = pSsesion->GetUser();
-			pUser->AddHitCount(m_arrPlayer[i]->score);
+			pUser->AddKillCount(m_arrPlayer[i]->score);
 		}
 
 	char buffer[255];

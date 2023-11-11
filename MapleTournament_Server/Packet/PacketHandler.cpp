@@ -753,7 +753,7 @@ void PacketHandler::C_LobbyInit(Session* _pSession, char* _packet)
 		const wchar_t* myNickname = pUser->GetNickname();
 		memcpy(buffer + count, myNickname, wcslen(myNickname) * 2);				count += (ushort)wcslen(myNickname) * 2;
 		*(wchar_t*)(buffer + count) = L'\0';								count += 2;
-		*(u_int*)(buffer + count) = pUser->GetHitCount();					count += sizeof(u_int);
+		*(u_int*)(buffer + count) = pUser->GetKillCount();					count += sizeof(u_int);
 		*(ushort*)buffer = count;
 		send(_pSession->GetSocket(), buffer, count, 0);
 	}
@@ -807,6 +807,8 @@ void PacketHandler::C_CheckHit(Session* _pSession, char* _packet)
 	}
 
 	*(char*)(buffer + count) = (char)deadPlayerList.size();									count += sizeof(char);
+
+	pPlayer->score += deadPlayerList.size();
 
 	for (const auto& player : deadPlayerList)
 	{
