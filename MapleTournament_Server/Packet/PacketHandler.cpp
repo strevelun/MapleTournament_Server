@@ -685,7 +685,13 @@ void PacketHandler::C_NextTurn(Session* _pSession, char* _packet)
 			char buffer[255];
 			ushort count = sizeof(ushort);
 			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
-			*(char*)(buffer + count) = (char)0;				count += sizeof(char);
+			std::list<eSkillName> skillNameList;
+			SkillManager::GetInst()->GetSkillsNotAvailable(pPlayer->mana, skillNameList);
+			*(char*)(buffer + count) = (char)skillNameList.size();				count += sizeof(char);
+			for (eSkillName name : skillNameList)
+			{
+				*(char*)(buffer + count) = (char)name;				count += sizeof(char);
+			}
 			*(ushort*)buffer = count;
 			send(pPlayer->socket, buffer, count, 0);
 

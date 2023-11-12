@@ -129,8 +129,12 @@ void Game::CheckPortal(int _slot)
 			newYPos = rand() % BoardHeight;
 		} while (m_arrPlayer[_slot]->xpos == newXPos && m_arrPlayer[_slot]->ypos == newYPos);
 		
+		RemovePlayerFromBoard(_slot);
+
 		m_arrPlayer[_slot]->xpos = newXPos;
 		m_arrPlayer[_slot]->ypos = newYPos;
+
+		m_arrBoard[newYPos][newXPos][_slot] = m_arrPlayer[_slot];
 
 		m_arrPlayer[_slot]->waitForPortal = true;
 
