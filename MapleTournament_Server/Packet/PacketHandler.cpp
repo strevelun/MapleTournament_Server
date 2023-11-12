@@ -851,3 +851,36 @@ void PacketHandler::C_CheckHeal(Session* _pSession, char* _packet)
 	*(ushort*)buffer = count;
 	pGame->SendAll(buffer);
 }
+
+void PacketHandler::C_ExitInGame(Session* _pSession, char* _packet)
+{
+	Room* pRoom = _pSession->GetRoom();
+	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
+
+	if (pRoom->GetMemberCount() <= 1) return;
+
+	const tMember* pMember = pRoom->GetMemberInfo(_pSession);
+
+	char buffer[255];
+	ushort count = sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateIngameUserLeave;				count += sizeof(ushort);
+	*(char*)(buffer + count) = (char)pMember->slotNumber;					count += sizeof(char);
+	*(char*)(buffer + count) = (char)pGame->GetCurSkillName(pMember->slotNumber);					count += sizeof(char);
+	*(ushort*)buffer = count;
+	pRoom->SendAll(buffer);
+
+	if (pGame->GetCurPlayerSlot() == pMember->slotNumber)
+	{
+		pGame->OnNextTurn();
+
+	}
+	_pSession->SetRoom(nullptr);
+	_pSession->ChangeSessionState(eSessionState::Lobby);
+	pGame->RemovePlayer(pMember->slotNumber);
+	pRoom->LeaveSession(_pSession);
+
+	count = sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_ExitInGame;				count += sizeof(ushort);
+	*(ushort*)buffer = count;
+	send(_pSession->GetSocket(), buffer, count, 0);
+}

@@ -23,6 +23,7 @@ std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallb
 	{ ePacketType::C_Standby, PacketHandler::C_Standby },
 	{ ePacketType::C_CheckHit, PacketHandler::C_CheckHit },
 	{ ePacketType::C_CheckHeal, PacketHandler::C_CheckHeal },
+	{ ePacketType::C_ExitInGame, PacketHandler::C_ExitInGame },
 };
 
 Session::Session(SOCKET _socket) :
