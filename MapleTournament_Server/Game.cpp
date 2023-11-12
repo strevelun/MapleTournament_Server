@@ -277,17 +277,10 @@ void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list, std::list<tPl
 
 	tPlayer* pCounterPlayer = nullptr;
 
-	const Skill* pSkill = SkillManager::GetInst()->GetSkill(pPlayer->_eSkillName);
+	const Skill* pSkill = SkillManager::GetInst()->GetSkill(_slot, pPlayer->_eSkillName);
 	if (pSkill->GetType() != eSkillType::Attack) return;
 
 	const SkillAttack* pSkillAttack = static_cast<const SkillAttack*>(pSkill);
-
-	if (_slot == 1 || _slot == 3)
-		if (pSkillAttack->IsInversed())
-		{
-			pSkill = SkillManager::GetInst()->GetSkill(eSkillName(int(pPlayer->_eSkillName) + 1));
-			pSkillAttack = static_cast<const SkillAttack*>(pSkill);
-		}
 
 	const std::list<std::pair<int, int>>& listCoordinates = pSkillAttack->GetListCoordinates();
 

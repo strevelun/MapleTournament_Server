@@ -88,10 +88,17 @@ bool SkillManager::Init()
 	return true;
 }
 
-const Skill* SkillManager::GetSkill(eSkillName _type) const
+const Skill* SkillManager::GetSkill(int _slot, eSkillName _type) const
 {
     std::map<eSkillName, Skill*>::const_iterator iter = m_mapSkill.find(_type);
     if (iter == m_mapSkill.end()) return nullptr;
+
+    if (_slot == 1 || _slot == 3)
+    {
+        SkillAttack* pAttack = dynamic_cast<SkillAttack*>(iter->second);
+        if (pAttack && pAttack->IsInversed())
+            ++iter;
+    }
 
     return iter->second;
 }

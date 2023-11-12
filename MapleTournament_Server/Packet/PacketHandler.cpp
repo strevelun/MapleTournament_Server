@@ -7,6 +7,7 @@
 #include "../Game.h"
 #include "../Skill.h"
 #include "../SkillHeal.h"
+#include "../SkillAttack.h"
 #include "../Network/Room.h"
 #include "../Network/User.h"
 #include "../Network/Session.h"
@@ -635,11 +636,33 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 	else if(type == eActionType::Skill)
 	{
 		eSkillName name = eSkillName(*(char*)_packet);
-		const Skill* pSkill = SkillManager::GetInst()->GetSkill(name);
+		const Skill* pSkill = SkillManager::GetInst()->GetSkill(pPlayer->slot, name);
 		pPlayer->mana -= pSkill->GetMana();
 		pGame->SetSkillName(pPlayer->slot, name);
 		*(char*)(buffer + count) = (char)pPlayer->mana;			count += sizeof(char);
 		*(char*)(buffer + count) = (char)name;						count += sizeof(char);
+		const SkillAttack* pAttack = dynamic_cast<const SkillAttack*>(pSkill);
+		if (pAttack)
+		{
+			const std::list<std::pair<int, int>>& list = pAttack->GetListCoordinates();
+			char* listSize = (char*)(buffer + count);			count += sizeof(char);
+			int xpos, ypos, size = 0;
+			for (const auto& coor : list)
+			{
+				xpos = pPlayer->xpos + coor.first;
+				ypos = pPlayer->ypos + coor.second;
+				if (xpos < 0 || ypos < 0 || xpos >= Game::BoardWidth || ypos >= Game::BoardHeight)
+					continue;
+				*(char*)(buffer + count) = (char)xpos;			count += sizeof(char);
+				*(char*)(buffer + count) = (char)ypos;			count += sizeof(char);
+				size++;
+			}
+			*listSize = (char)size;
+		}
+		else
+		{
+			*(char*)(buffer + count) = (char)0;			count += sizeof(char);
+		}
 	}
 	*(ushort*)buffer = count;
 	pRoom->SendAll(buffer);
@@ -825,7 +848,7 @@ void PacketHandler::C_CheckHeal(Session* _pSession, char* _packet)
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
 	tPlayer* pPlayer = pGame->FindPlayer(_pSession);
 	
-	const Skill* pSkill = SkillManager::GetInst()->GetSkill(eSkillName::Heal0); // 현재 단 한 개
+	const Skill* pSkill = SkillManager::GetInst()->GetSkill(0, eSkillName::Heal0); // 현재 단 한 개
 	const SkillHeal* pSkillHeal = static_cast<const SkillHeal*>(pSkill);
 
 
