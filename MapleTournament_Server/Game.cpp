@@ -183,7 +183,24 @@ void Game::SendAll(char* _buffer)
 	for (int i = 0; i < RoomSlotNum; i++)
 		if (m_arrPlayer[i])
 			send(m_arrPlayer[i]->socket, _buffer, *(ushort*)_buffer, 0);
+}
 
+void Game::SendGameOverPacket()
+{
+	char buffer[255];
+	ushort 	count = sizeof(ushort);
+	*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;				count += sizeof(ushort);
+	char* score = (char*)(buffer + count);		count += sizeof(char);
+	*(ushort*)buffer = count;
+
+	for (int i = 0; i < RoomSlotNum; i++)
+	{
+		if (m_arrPlayer[i])
+		{
+			*score = (char)m_arrPlayer[i]->score;
+			send(m_arrPlayer[i]->socket, buffer, count, 0);
+		}
+	}
 }
 
 eMoveName Game::Move(int _slot, eMoveName _name)
@@ -386,10 +403,5 @@ void Game::OnGameOver()
 			User* pUser = pSsesion->GetUser();
 			pUser->AddKillCount(m_arrPlayer[i]->score);
 		}
-
-	char buffer[255];
-	ushort count = sizeof(ushort);
-	*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;			count += sizeof(ushort);
-	*(ushort*)buffer = count;
-	SendAll(buffer);
+	SendGameOverPacket();
 }

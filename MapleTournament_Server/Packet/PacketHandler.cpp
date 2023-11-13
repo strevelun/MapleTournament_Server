@@ -108,10 +108,7 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 				pGame->RemovePlayer(pMember->slotNumber);
 				if (memberCount <= 2) // 2명인 상태에서 한 명 이상이 게임 종료 한 경우
 				{
-					count = sizeof(ushort);
-					*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;				count += sizeof(ushort);
-					*(ushort*)buffer = count;
-					pRoom->SendAll(buffer);
+					pGame->SendGameOverPacket();
 					GameManager::GetInst()->DeleteGame(roomId);
 				}
 			}
@@ -774,6 +771,9 @@ void PacketHandler::C_LobbyInit(Session* _pSession, char* _packet)
 		}
 	}
 
+	// 킬 수는 매번 로비씬에 들어갈때마다 보내지말고 게임 종료 시에 한번 보내서 클라에서 
+	// 로그인 시 S_UpdateProfile 한번.
+	// 닉네임 제외하기
 	count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateProfile;			count += sizeof(ushort);
 	User* pUser = _pSession->GetUser();
@@ -889,6 +889,7 @@ void PacketHandler::C_ExitInGame(Session* _pSession, char* _packet)
 	if (pRoom->GetMemberCount() <= 1) return;
 
 	const tMember* pMember = pRoom->GetMemberInfo(_pSession);
+	tPlayer* pPlayer = pGame->FindPlayer(_pSession);
 
 	char buffer[255];
 	ushort count = sizeof(ushort);
@@ -903,6 +904,8 @@ void PacketHandler::C_ExitInGame(Session* _pSession, char* _packet)
 		pGame->OnNextTurn();
 
 	}
+	User* pUser = _pSession->GetUser();
+	pUser->AddKillCount(pPlayer->score);
 	_pSession->SetRoom(nullptr);
 	_pSession->ChangeSessionState(eSessionState::Lobby);
 	pGame->RemovePlayer(pMember->slotNumber);

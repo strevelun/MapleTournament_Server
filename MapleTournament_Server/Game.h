@@ -18,7 +18,7 @@ typedef struct _tPlayer
 	SOCKET socket = 0;
 	bool ready = false;
 	bool standby = false;
-	int score = 0; // 때린 횟수
+	int score = 0; // 킬 수
 	int slot = 0;
 	int hp = 20;
 	int mana = 10;
@@ -79,6 +79,7 @@ public:
 	void UpdatePortal();
 
 	void SendAll(char* _buffer);
+	void SendGameOverPacket();
 
 public:
 	eMoveName Move(int _slot, eMoveName _name);// slot으로 플레이어 구분
