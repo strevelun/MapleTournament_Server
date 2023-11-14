@@ -13,13 +13,14 @@ class Session;
 class SessionManager
 {
 private:
+	int m_sessionId = 0;
 	std::vector<Session*> m_vecSession; 
 	fd_set_ex			m_fdUser;
 
 public:
 	bool Init(SOCKET _hSocketServer);
 
-	bool AddSession(Session* _pSession);
+	bool AddSession(SOCKET _socket);
 	Session* FindSession(SOCKET _socket);
 	bool RemoveSession(SOCKET _socket);
 

@@ -26,8 +26,8 @@ std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallb
 	{ ePacketType::C_ExitInGame, PacketHandler::C_ExitInGame },
 };
 
-Session::Session(SOCKET _socket) :
-	m_socket(_socket)
+Session::Session(unsigned int _id, SOCKET _socket) :
+	m_id(_id), m_socket(_socket)
 {
 
 }

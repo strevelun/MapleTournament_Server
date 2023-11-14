@@ -27,12 +27,14 @@ bool SessionManager::Init(SOCKET _hSocketServer)
 	return true;
 }
 
-bool SessionManager::AddSession(Session* _pSession)
+bool SessionManager::AddSession(SOCKET _socket)
 {
 	if (m_vecSession.size() >= 64) return false;
 
-	FD_SET_EX(_pSession->GetSocket(), &m_fdUser, _pSession);
-	m_vecSession.push_back(_pSession);
+	Session* pSession = new Session(m_sessionId++, _socket);
+
+	FD_SET_EX(_socket, &m_fdUser, pSession);
+	m_vecSession.push_back(pSession);
 	return true;
 }
 

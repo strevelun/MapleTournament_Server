@@ -12,8 +12,6 @@ typedef unsigned short ushort;
 
 Game::Game()
 {
-	srand((unsigned int)time(0));
-
 	for (int i = 0; i < RoomSlotNum; i++)
 		m_arrPlayer[i] = nullptr;
 }
@@ -82,13 +80,13 @@ int Game::CountAlivePlayer()
 
 eSkillName Game::GetCurSkillName(int _slot) const
 {
-	return m_arrPlayer[_slot]->_eSkillName;
+	return m_arrPlayer[_slot]->eSkillName;
 }
 
 void Game::SetSkillName(int _slot, eSkillName _eName)
 {
 	if(m_arrPlayer[_slot])
-		m_arrPlayer[_slot]->_eSkillName = _eName;
+		m_arrPlayer[_slot]->eSkillName = _eName;
 }
 
 void Game::SetPortalPosition(int _xpos, int _ypos)
@@ -291,14 +289,14 @@ eMoveName Game::Move(int _slot, eMoveName _name)
 	return _name;
 }
 
-void Game::GetHitPlayerList(int _slot, std::list<tPlayer*>& _list, std::list<tPlayer*>& _listDead)
+void Game::GetHitResult(int _slot, std::list<tPlayer*>& _list, std::list<tPlayer*>& _listDead)
 {
 	tPlayer* pPlayer = m_arrPlayer[_slot];
 	if (!pPlayer) return;
 
 	tPlayer* pCounterPlayer = nullptr;
 
-	const Skill* pSkill = SkillManager::GetInst()->GetSkill(_slot, pPlayer->_eSkillName);
+	const Skill* pSkill = SkillManager::GetInst()->GetSkill(_slot, pPlayer->eSkillName);
 	if (pSkill->GetType() != eSkillType::Attack) return;
 
 	const SkillAttack* pSkillAttack = static_cast<const SkillAttack*>(pSkill);
@@ -364,7 +362,7 @@ void Game::OnNextTurn()
 		for (int i = 0; i < RoomSlotNum; ++i)
 		{
 			if (m_arrPlayer[i])
-				m_arrPlayer[i]->_eSkillName = eSkillName::None;
+				m_arrPlayer[i]->eSkillName = eSkillName::None;
 		}
 
 		char buffer[255];

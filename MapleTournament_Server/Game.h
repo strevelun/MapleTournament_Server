@@ -25,7 +25,7 @@ typedef struct _tPlayer
 	int xpos = 0, ypos = 0;
 	bool alive = true;
 	bool waitForPortal = false;
-	eSkillName _eSkillName = eSkillName::None;
+	eSkillName eSkillName = eSkillName::None;
 } tPlayer;
 
 class Game
@@ -83,7 +83,7 @@ public:
 
 public:
 	eMoveName Move(int _slot, eMoveName _name);// slot으로 플레이어 구분
-	void GetHitPlayerList(int _slot, std::list<tPlayer*>& _list, std::list<tPlayer*>& _listDead);
+	void GetHitResult(int _slot, std::list<tPlayer*>& _list, std::list<tPlayer*>& _listDead);
 	void OnNextTurn();
 
 private:

@@ -49,8 +49,7 @@ void Selector::Select()
 				SOCKET acceptedClientSocket = accept(m_hSocketServer, (SOCKADDR*)&addrClient, &addrSize);
 				printf("%d, (%d.%d.%d.%d) %d ¿¬°áµÊ\n", (int)acceptedClientSocket, addrClient.sin_addr.S_un.S_un_b.s_b1, addrClient.sin_addr.S_un.S_un_b.s_b2, addrClient.sin_addr.S_un.S_un_b.s_b3, addrClient.sin_addr.S_un.S_un_b.s_b4, addrClient.sin_port);
 				
-				Session* pSession = new Session(acceptedClientSocket);
-				SessionManager::GetInst()->AddSession(pSession);
+				SessionManager::GetInst()->AddSession(acceptedClientSocket);
 			}
 			else
 			{

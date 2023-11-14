@@ -20,6 +20,7 @@ typedef struct _unpPacket
 class Session
 {
 private:
+	unsigned int m_id;
 	eSessionState m_eState = eSessionState::Login;
 	User* m_pUser = nullptr;
 	Room* m_pRoom = nullptr;
@@ -30,7 +31,7 @@ private:
 	static std::map<ePacketType, void(*)(Session*, char*)> m_mapPacketHandlerCallback;
 
 public:
-	Session(SOCKET _socket);
+	Session(unsigned int _id, SOCKET _socket);
 	virtual ~Session();
 
 	void ChangeSessionState(eSessionState _eState) { m_eState = _eState; }
@@ -38,6 +39,7 @@ public:
 	SOCKET GetSocket() const { return m_socket; }
 	User* GetUser() const { return m_pUser; }
 	Room* GetRoom() const { return m_pRoom; }
+	unsigned int GetId() const { return m_id; }
 
 	void SetUser(User* _pUser) { m_pUser = _pUser; }
 	void SetRoom(Room* _pRoom) { m_pRoom = _pRoom; }

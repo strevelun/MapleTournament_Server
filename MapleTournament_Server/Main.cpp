@@ -1,23 +1,13 @@
 ﻿#include "ServerApp.h"
 #include <WinSock2.h>
 
-#pragma comment( lib, "ws2_32.lib")
-/*
-BOOL WINAPI ConsoleHandler(DWORD CEvent)
-{
-    switch (CEvent)
-    {
-    case CTRL_CLOSE_EVENT:
+#include <ctime>
 
-            return TRUE;
-    }
-    return FALSE;
-}
-*/
+#pragma comment( lib, "ws2_32.lib")
 
 int main()
 {
-   // SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler, TRUE);
+    srand((unsigned int)time(0));
 
 	ServerApp app;
 	if (app.Init("192.168.219.167", 30001))

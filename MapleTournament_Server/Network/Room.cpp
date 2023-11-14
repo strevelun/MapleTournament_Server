@@ -8,7 +8,10 @@ Room::Room(unsigned int _id, wchar_t* _strTitle)
 	wcsncpy_s(m_strTitle, sizeof(m_strTitle) / sizeof(wchar_t), _strTitle, sizeof(m_strTitle) / sizeof(wchar_t) - 1);
 	size_t size = m_arrMember.size();
 	for (int i = 0; i < size; i++)
-		m_arrMember[i].slotNumber = i;
+	{
+		m_arrMember[i].m_stInfo.slotNumber = i;
+		m_arrMemberExist[i] = false;
+	}
 }
 
 Room::~Room()
@@ -16,18 +19,21 @@ Room::~Room()
 	
 }
 
-void Room::AddSession(Session* _pSession, eMemberType _eType)
+void Room::AddMember(Session* _pSession, eMemberType _eType)
 {
 	if (m_memberCount >= 4) return;
 
 	unsigned int size = m_arrMember.size();
 	for (int i = 0; i < size; i++)
 	{
-		if (m_arrMember[i].pSession == nullptr)
+		if (!m_arrMemberExist[i])
 		{
-			m_arrMember[i].pSession = _pSession;
-			m_arrMember[i]._eType = _eType;
-			m_arrMember[i]._eState = _eType == eMemberType::Owner ? eMemberState::Ready : eMemberState::Wait;
+			m_arrMember[i].m_id = _pSession->GetId();
+			m_arrMember[i].m_stInfo.pUser = _pSession->GetUser();
+			m_arrMember[i].m_socket = _pSession->GetSocket();
+			m_arrMember[i].m_stInfo.eType = _eType;
+			m_arrMember[i].m_stInfo.eState = _eType == eMemberType::Owner ? eMemberState::Ready : eMemberState::Wait;
+			m_arrMemberExist[i] = true;
 			m_memberCount++;
 			return;
 		}
@@ -36,22 +42,23 @@ void Room::AddSession(Session* _pSession, eMemberType _eType)
 
 // 자신이 방장인지 체크
 // 방장이면 다른사람이 방장
-void Room::LeaveSession(Session* _pSession)
+void Room::LeaveMember(Session* _pSession)
 {
 	unsigned int size = m_arrMember.size();
 	int i = 0;
 	bool isOwner = false;
 	for (; i < size; i++)
 	{
-		if (m_arrMember[i].pSession == _pSession)
+		if (m_arrMember[i].m_id == _pSession->GetId())
 		{
-			if(m_arrMember[i]._eType == eMemberType::Owner) 
+			if(m_arrMember[i].m_stInfo.eType == eMemberType::Owner)
 				isOwner = true;
-			m_arrMember[i].pSession = nullptr;
-			m_arrMember[i]._eType = eMemberType::None;
-			m_arrMember[i]._eState = eMemberState::None;
-			m_arrMember[i].characterChoice = 0;
+			//m_arrMember[i].m_stInfo.pUser = nullptr;
+			m_arrMember[i].m_stInfo.eType = eMemberType::None;
+			m_arrMember[i].m_stInfo.eState = eMemberState::None;
+			m_arrMember[i].m_stInfo.characterChoice = 0;
 			m_memberCount--;
+			m_arrMemberExist[i] = false;
 			break;
 		}
 	}
@@ -60,8 +67,8 @@ void Room::LeaveSession(Session* _pSession)
 	{
 		for (i = 0; i < size; i++)
 		{
-			if (m_arrMember[i].pSession == nullptr) continue;
-			m_arrMember[i]._eType = eMemberType::Owner;
+			if (!m_arrMemberExist[i]) continue;
+			m_arrMember[i].m_stInfo.eType = eMemberType::Owner;
 			break;
 		}
 	}
@@ -79,23 +86,23 @@ unsigned int Room::GetUserCount() const
 	return count;
 }
 */
-const tMember* Room::GetRoomOwner() const
+const Member* Room::GetRoomOwner() const
 {
 	unsigned int size = m_arrMember.size();
 	for (int i = 0; i < size; i++)
 	{
-		if (m_arrMember[i]._eType == eMemberType::Owner)
+		if (m_arrMember[i].GetInfo().eType == eMemberType::Owner)
 			return &m_arrMember[i];
 	}
 	return nullptr;
 }
 
-const tMember* Room::GetMemberInfo(Session* _pSession)
+const Member* Room::GetMemberInfo(unsigned int _id)
 {
 	size_t size = m_arrMember.size();
 	for (size_t i = 0; i < size; i++)
 	{
-		if (m_arrMember[i].pSession == _pSession)
+		if (m_arrMember[i].m_id == _id)
 			return &m_arrMember[i];
 	}
 	return nullptr;
@@ -106,30 +113,35 @@ void Room::SetRoomState(eRoomState _state)
 	m_eState = _state;
 }
 
-void Room::SetMemberState(Session* _pSession, eMemberState _state)
+void Room::SetMemberState(unsigned int _id, eMemberState _state)
 {
 	size_t size = m_arrMember.size();
 	for (size_t i = 0; i < size; i++)
 	{
-		if (m_arrMember[i].pSession == _pSession)
+		if (m_arrMember[i].m_id == _id)
 		{
-			m_arrMember[i]._eState = _state;
+			m_arrMember[i].m_stInfo.eState = _state;
 			break;
 		}
 	}
 }
 
-void Room::SetMemberChoice(Session* _pSession, int _choice)
+void Room::SetMemberChoice(unsigned int _id, int _choice)
 {
 	size_t size = m_arrMember.size();
 	for (size_t i = 0; i < size; i++)
 	{
-		if (m_arrMember[i].pSession == _pSession)
+		if (m_arrMember[i].m_id == _id)
 		{
-			m_arrMember[i].characterChoice = _choice;
+			m_arrMember[i].m_stInfo.characterChoice = _choice;
 			break;
 		}
 	}
+}
+
+bool Room::IsMemberExist(int _slot)
+{
+	return m_arrMemberExist[_slot];
 }
 
 bool Room::IsRoomReady()
@@ -138,18 +150,19 @@ bool Room::IsRoomReady()
 	if (m_memberCount <= 1) return false;
 	for (size_t i = 0; i < size; i++)
 	{
-		if (m_arrMember[i]._eState == eMemberState::Wait && m_arrMember[i]._eType == eMemberType::Member)
+		if (m_arrMember[i].m_stInfo.eState == eMemberState::Wait && m_arrMember[i].m_stInfo.eType == eMemberType::Member)
 				return false;
 	}
 	return true;
 }
 
-void Room::SendAll(char* _buffer)
+void Room::SendAll(char* _buffer, Session* _pExceptSession)
 {
 	size_t size = m_arrMember.size();
 	for (int i = 0; i < size; i++)
 	{
-		if (m_arrMember[i].pSession == nullptr) continue;
-		send(m_arrMember[i].pSession->GetSocket(), _buffer, *(u_short*)_buffer, 0);
+		if (!m_arrMemberExist[i]) continue;
+		if (_pExceptSession && _pExceptSession->GetSocket() == m_arrMember[i].m_socket) continue;
+		send(m_arrMember[i].m_socket, _buffer, *(u_short*)_buffer, 0);
 	}
 }
