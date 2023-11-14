@@ -13,20 +13,53 @@ class Session;
 #define HPMax				20
 #define MPMax				10
 
-typedef struct _tPlayer
+class Player
 {
-	SOCKET socket = 0;
-	bool ready = false;
-	bool standby = false;
-	int score = 0; // 킬 수
-	int slot = 0;
-	int hp = 20;
-	int mana = 10;
-	int xpos = 0, ypos = 0;
-	bool alive = true;
-	bool waitForPortal = false;
-	eSkillName eSkillName = eSkillName::None;
-} tPlayer;
+private:
+	friend class Game;
+
+private:
+	SOCKET m_socket = 0;
+	bool m_bReady = false;
+	bool m_bStandby = false;
+	int m_score = 0; // 킬 수
+	int m_slot = 0;
+	int m_hp = 20;
+	int m_mana = 10;
+	int m_xpos = 0, m_ypos = 0;
+	bool m_bAlive = true;
+	bool m_bWaitForPortal = false;
+	eSkillName m_eSkillName = eSkillName::None;
+
+	Player(SOCKET _socket, int _slot, int _xpos, int _ypos);
+
+public:
+	SOCKET GetSocket() const { return m_socket; }
+	bool IsReady() const { return m_bReady; }
+	bool IsStandby() const { return m_bStandby; }
+	int GetScore() const { return m_score; }
+	int GetSlot() const { return m_slot; }
+	int GetHP() const { return m_hp; }
+	int GetMana() const { return m_mana; }
+	int GetXPos() const { return m_xpos; }
+	int GetYPos() const { return m_ypos; }
+	bool IsAlive() const { return m_bAlive; }
+	bool IsWaitingForPortal() const { return m_bWaitForPortal; }
+	eSkillName GetSkillName() const { return m_eSkillName; }
+
+	void SetSocket(SOCKET socket) { m_socket = socket; }
+	void SetReady(bool ready) { m_bReady = ready; }
+	void SetStandby(bool standby) { m_bStandby = standby; }
+	void SetScore(int score) { m_score = score; }
+	void SetSlot(int slot) { m_slot = slot; }
+	void SetHP(int hp) { m_hp = hp; }
+	void SetMana(int mana) { m_mana = mana; }
+	void SetXPos(int xpos) { m_xpos = xpos; }
+	void SetYPos(int ypos) { m_ypos = ypos; }
+	void SetAlive(bool alive) { m_bAlive = alive; }
+	void SetWaitForPortal(bool waitForPortal) { m_bWaitForPortal = waitForPortal; }
+	void SetSkillName(eSkillName skillName) { m_eSkillName = skillName; }
+};
 
 class Game
 {
@@ -36,8 +69,8 @@ public:
 	static constexpr int BoardHeight = 4;
 
 private:
-	std::array<std::array<std::map<int, tPlayer*>, BoardWidth>, BoardHeight> m_arrBoard;
-	std::array<tPlayer*, RoomSlotNum> m_arrPlayer;
+	std::array<std::array<std::map<int, Player*>, BoardWidth>, BoardHeight> m_arrBoard;
+	std::array<Player*, RoomSlotNum> m_arrPlayer;
 
 	std::pair<int, int> m_portalPosition;
 
@@ -52,9 +85,9 @@ public:
 
 	void Update();
 
-	void AddPlayer(tPlayer* _pPlayer);
-	tPlayer* FindPlayer(int _slot);
-	tPlayer* FindPlayer(Session* _pSession);
+	void AddPlayer(SOCKET _socket, int _slot, int _xpos, int _ypos);
+	Player* FindPlayer(int _slot);
+	Player* FindPlayer(Session* _pSession);
 	bool RemovePlayer(int _slot);
 	void RemovePlayerFromBoard(int _slot);
 
@@ -81,9 +114,15 @@ public:
 	void SendAll(char* _buffer);
 	void SendGameOverPacket();
 
+	void SetPlayerMana();
+	void SetPlayerReady();
+	void SetPlayerWaitForPortal();
+	void SetPlayerStandBy();
+	void SetPlayerScore();
+
 public:
 	eMoveName Move(int _slot, eMoveName _name);// slot으로 플레이어 구분
-	void GetHitResult(int _slot, std::list<tPlayer*>& _list, std::list<tPlayer*>& _listDead);
+	void GetHitResult(int _slot, std::list<Player*>& _list, std::list<Player*>& _listDead);
 	void OnNextTurn();
 
 private:

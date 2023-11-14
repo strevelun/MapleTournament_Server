@@ -16,8 +16,6 @@ Room* RoomManager::CreateRoom(wchar_t* _strTitle)
 {
 	Room* pRoom = new Room(m_roomId, _strTitle);
 	m_mapRoom.insert({m_roomId++, pRoom}); 
-	// std::make_pair vs {}
-	// std::vector[i] vs .at()
 
 	return pRoom;
 }
@@ -30,7 +28,7 @@ Room* RoomManager::FindRoom(unsigned int _roomId)
 	return nullptr;
 }
 
-bool RoomManager::DeleteRoom(unsigned int _roomId)
+bool RoomManager:: DeleteRoom(unsigned int _roomId)
 {
 	Room* pRoom = FindRoom(_roomId);
 	if (!pRoom)		return false;

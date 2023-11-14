@@ -18,9 +18,9 @@ Selector::~Selector()
 void Selector::Select()
 {
 	SOCKET clientSocket;
+	int packetLeastSize = sizeof(u_short) + sizeof(u_short);
 	int					recvSize, totalSize = 0;
 	u_short				packetSize = 0;
-	char				recvBuffer[255];
 
 	timeval timeout = { 0, 0 };
 
@@ -55,36 +55,11 @@ void Selector::Select()
 			{
 				Session* pSession = _fdUser.fd_array_session[i];
 
-				pSession->LoadUnprocessedPacket(recvBuffer, totalSize);
-
-				recvSize = recv(clientSocket, recvBuffer + totalSize, sizeof(recvBuffer) - totalSize, 0);
-				if (recvSize == SOCKET_ERROR)
-				{
+				int result = pSession->ReceivePacket();
+				if(result == SOCKET_ERROR || result == 0)
 					SessionManager::GetInst()->RemoveSession(clientSocket);
-					return;
-				}
 
-				totalSize += recvSize;
-
-				while (totalSize >= 1)
-				{
-					packetSize = *(u_short*)recvBuffer;
-					if (totalSize == 1 || packetSize > totalSize)
-					{
-						pSession->SaveUnprocessedPacket(recvBuffer, totalSize);
-						break;
-					}
-					if (packetSize < sizeof(u_short) + sizeof(u_short)) 
-						break;
-
-					char* temp = recvBuffer;									temp += sizeof(u_short);
-					u_short type = *(u_short*)temp;								temp += sizeof(u_short);
-
-					pSession->ProcessPacket((ePacketType)type, temp);
-
-					totalSize -= packetSize;
-					memcpy(recvBuffer, recvBuffer + packetSize, totalSize);
-				}
+				pSession->ProcessPacket();
 			}
 		}
 	}

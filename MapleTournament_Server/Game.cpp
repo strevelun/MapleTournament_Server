@@ -34,22 +34,23 @@ void Game::Update()
 	UpdatePortal();
 }
 
-void Game::AddPlayer(tPlayer* _pPlayer)
+void Game::AddPlayer(SOCKET _socket, int _slot, int _xpos, int _ypos)
 {
-	m_arrPlayer[_pPlayer->slot] = _pPlayer;
-	m_arrBoard[_pPlayer->ypos][_pPlayer->xpos][_pPlayer->slot] = _pPlayer;
+	Player* pPlayer = new Player(_socket, _slot, _xpos, _ypos);
+	m_arrPlayer[_slot] = pPlayer;
+	m_arrBoard[_ypos][_xpos][_slot] = pPlayer;
 }
 
-tPlayer* Game::FindPlayer(int _slot)
+Player* Game::FindPlayer(int _slot)
 {
 	return m_arrPlayer[_slot];
 }
 
-tPlayer* Game::FindPlayer(Session* _pSession)
+Player* Game::FindPlayer(Session* _pSession)
 {
 	for (int i = 0; i < RoomSlotNum; i++)
 	{
-		if (m_arrPlayer[i] && m_arrPlayer[i]->socket == _pSession->GetSocket())
+		if (m_arrPlayer[i] && m_arrPlayer[i]->m_socket == _pSession->GetSocket())
 			return m_arrPlayer[i];
 	}
 	return nullptr;
@@ -65,7 +66,7 @@ bool Game::RemovePlayer(int _slot)
 
 void Game::RemovePlayerFromBoard(int _slot)
 {
-	m_arrBoard[m_arrPlayer[_slot]->ypos][m_arrPlayer[_slot]->xpos].erase(m_arrPlayer[_slot]->slot);
+	m_arrBoard[m_arrPlayer[_slot]->m_ypos][m_arrPlayer[_slot]->m_xpos].erase(m_arrPlayer[_slot]->m_slot);
 }
 
 int Game::CountAlivePlayer()
@@ -73,20 +74,20 @@ int Game::CountAlivePlayer()
 	int count = 0;
 	for (int i = 0; i < RoomSlotNum; i++)
 	{
-		if (m_arrPlayer[i] && m_arrPlayer[i]->alive == true) ++count;
+		if (m_arrPlayer[i] && m_arrPlayer[i]->m_bAlive == true) ++count;
 	}
 	return count;
 }
 
 eSkillName Game::GetCurSkillName(int _slot) const
 {
-	return m_arrPlayer[_slot]->eSkillName;
+	return m_arrPlayer[_slot]->m_eSkillName;
 }
 
 void Game::SetSkillName(int _slot, eSkillName _eName)
 {
 	if(m_arrPlayer[_slot])
-		m_arrPlayer[_slot]->eSkillName = _eName;
+		m_arrPlayer[_slot]->m_eSkillName = _eName;
 }
 
 void Game::SetPortalPosition(int _xpos, int _ypos)
@@ -101,7 +102,7 @@ void Game::SetPortalPosition(int _xpos, int _ypos)
 bool Game::IsAllReady() const
 {
 	for (int i = 0; i < RoomSlotNum; i++)
-		if (m_arrPlayer[i] && m_arrPlayer[i]->ready == false)
+		if (m_arrPlayer[i] && m_arrPlayer[i]->m_bReady == false)
 			return false;
 	return true;
 }
@@ -109,14 +110,14 @@ bool Game::IsAllReady() const
 bool Game::IsAllStandby() const
 {
 	for (int i = 0; i < RoomSlotNum; i++)
-		if (m_arrPlayer[i] && m_arrPlayer[i]->standby == false)
+		if (m_arrPlayer[i] && m_arrPlayer[i]->m_bStandby == false)
 			return false;
 	return true;
 }
 
 void Game::CheckPortal(int _slot)
 {
-	if (m_arrPlayer[_slot]->xpos == m_portalPosition.first && m_arrPlayer[_slot]->ypos == m_portalPosition.second)
+	if (m_arrPlayer[_slot]->m_xpos == m_portalPosition.first && m_arrPlayer[_slot]->m_ypos == m_portalPosition.second)
 	{
 		// 플레이어 랜덤 이동시키고 한번 더 턴을 줌. 그리고 포탈은 비활성화
 		// 서버에서 포탈 비활성화는 -1
@@ -125,16 +126,16 @@ void Game::CheckPortal(int _slot)
 		do {
 			newXPos = rand() % BoardWidth;
 			newYPos = rand() % BoardHeight;
-		} while (m_arrPlayer[_slot]->xpos == newXPos && m_arrPlayer[_slot]->ypos == newYPos);
+		} while (m_arrPlayer[_slot]->m_xpos == newXPos && m_arrPlayer[_slot]->m_ypos == newYPos);
 		
 		RemovePlayerFromBoard(_slot);
 
-		m_arrPlayer[_slot]->xpos = newXPos;
-		m_arrPlayer[_slot]->ypos = newYPos;
+		m_arrPlayer[_slot]->m_xpos = newXPos;
+		m_arrPlayer[_slot]->m_ypos = newYPos;
 
 		m_arrBoard[newYPos][newXPos][_slot] = m_arrPlayer[_slot];
 
-		m_arrPlayer[_slot]->waitForPortal = true;
+		m_arrPlayer[_slot]->m_bWaitForPortal = true;
 
 		m_portalPosition.first = -1;
 		m_portalPosition.second = -1;
@@ -150,7 +151,7 @@ int Game::UpdateNextTurn()
 			m_curPlayerSlot = -1;
 			break;
 		}
-	} while (m_arrPlayer[++m_curPlayerSlot] == nullptr || m_arrPlayer[m_curPlayerSlot]->alive == false);
+	} while (m_arrPlayer[++m_curPlayerSlot] == nullptr || m_arrPlayer[m_curPlayerSlot]->m_bAlive == false);
 
 	return m_curPlayerSlot;
 }
@@ -180,7 +181,7 @@ void Game::SendAll(char* _buffer)
 {
 	for (int i = 0; i < RoomSlotNum; i++)
 		if (m_arrPlayer[i])
-			send(m_arrPlayer[i]->socket, _buffer, *(ushort*)_buffer, 0);
+			send(m_arrPlayer[i]->m_socket, _buffer, *(ushort*)_buffer, 0);
 }
 
 void Game::SendGameOverPacket()
@@ -195,41 +196,41 @@ void Game::SendGameOverPacket()
 	{
 		if (m_arrPlayer[i])
 		{
-			*score = (char)m_arrPlayer[i]->score;
-			send(m_arrPlayer[i]->socket, buffer, count, 0);
+			*score = (char)m_arrPlayer[i]->m_score;
+			send(m_arrPlayer[i]->m_socket, buffer, count, 0);
 		}
 	}
 }
 
 eMoveName Game::Move(int _slot, eMoveName _name)
 {
-	tPlayer* pPlayer = FindPlayer(_slot);
+	Player* pPlayer = FindPlayer(_slot);
 	if (!pPlayer) return eMoveName::None;
 
 	if (_name == eMoveName::LeftMove)
 	{
-		if (pPlayer->xpos - 1 >= 0)
+		if (pPlayer->m_xpos - 1 >= 0)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos - 1][pPlayer->slot] = pPlayer;
-			pPlayer->xpos -= 1;
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos].erase(pPlayer->m_slot);
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos - 1][pPlayer->m_slot] = pPlayer;
+			pPlayer->m_xpos -= 1;
 		}
 		else
 			return eMoveName::None;
 	}
 	else if (_name == eMoveName::LeftDoubleMove)
 	{
-		if (pPlayer->xpos - 2 >= 0)
+		if (pPlayer->m_xpos - 2 >= 0)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos - 2][pPlayer->slot] = pPlayer;
-			pPlayer->xpos -= 2;
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos].erase(pPlayer->m_slot);
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos - 2][pPlayer->m_slot] = pPlayer;
+			pPlayer->m_xpos -= 2;
 		}
-		else if (pPlayer->xpos - 1 >= 0)
+		else if (pPlayer->m_xpos - 1 >= 0)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos - 1][pPlayer->slot] = pPlayer;
-			pPlayer->xpos -= 1;
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos].erase(pPlayer->m_slot);
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos - 1][pPlayer->m_slot] = pPlayer;
+			pPlayer->m_xpos -= 1;
 			_name = eMoveName::LeftMove;
 		}
 		else
@@ -237,28 +238,28 @@ eMoveName Game::Move(int _slot, eMoveName _name)
 	}
 	else if (_name == eMoveName::RightMove)
 	{
-		if (pPlayer->xpos + 1 < BoardWidth)
+		if (pPlayer->m_xpos + 1 < BoardWidth)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos + 1][pPlayer->slot] = pPlayer;
-			pPlayer->xpos += 1;
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos].erase(pPlayer->m_slot);
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos + 1][pPlayer->m_slot] = pPlayer;
+			pPlayer->m_xpos += 1;
 		}
 		else
 			return eMoveName::None;
 	}
 	else if (_name == eMoveName::RightDoubleMove)
 	{
-		if (pPlayer->xpos + 2 < BoardWidth)
+		if (pPlayer->m_xpos + 2 < BoardWidth)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos + 2][pPlayer->slot] = pPlayer;
-			pPlayer->xpos += 2;
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos].erase(pPlayer->m_slot);
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos + 2][pPlayer->m_slot] = pPlayer;
+			pPlayer->m_xpos += 2;
 		}
-		else if (pPlayer->xpos + 1 < BoardWidth)
+		else if (pPlayer->m_xpos + 1 < BoardWidth)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos + 1][pPlayer->slot] = pPlayer;
-			pPlayer->xpos += 1;
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos].erase(pPlayer->m_slot);
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos + 1][pPlayer->m_slot] = pPlayer;
+			pPlayer->m_xpos += 1;
 			_name = eMoveName::RightMove;
 		}
 		else
@@ -266,22 +267,22 @@ eMoveName Game::Move(int _slot, eMoveName _name)
 	}
 	else if (_name == eMoveName::UpMove)
 	{
-		if (pPlayer->ypos - 1 >= 0)
+		if (pPlayer->m_ypos - 1 >= 0)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
-			m_arrBoard[pPlayer->ypos - 1][pPlayer->xpos][pPlayer->slot] = pPlayer;
-			pPlayer->ypos -= 1;
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos].erase(pPlayer->m_slot);
+			m_arrBoard[pPlayer->m_ypos - 1][pPlayer->m_xpos][pPlayer->m_slot] = pPlayer;
+			pPlayer->m_ypos -= 1;
 		}
 		else
 			return eMoveName::None;
 	}
 	else if (_name == eMoveName::DownMove)
 	{
-		if (pPlayer->ypos + 1 < BoardHeight)
+		if (pPlayer->m_ypos + 1 < BoardHeight)
 		{
-			m_arrBoard[pPlayer->ypos][pPlayer->xpos].erase(pPlayer->slot);
-			m_arrBoard[pPlayer->ypos + 1][pPlayer->xpos][pPlayer->slot] = pPlayer;
-			pPlayer->ypos += 1;
+			m_arrBoard[pPlayer->m_ypos][pPlayer->m_xpos].erase(pPlayer->m_slot);
+			m_arrBoard[pPlayer->m_ypos + 1][pPlayer->m_xpos][pPlayer->m_slot] = pPlayer;
+			pPlayer->m_ypos += 1;
 		}
 		else
 			return eMoveName::None;
@@ -289,14 +290,14 @@ eMoveName Game::Move(int _slot, eMoveName _name)
 	return _name;
 }
 
-void Game::GetHitResult(int _slot, std::list<tPlayer*>& _list, std::list<tPlayer*>& _listDead)
+void Game::GetHitResult(int _slot, std::list<Player*>& _list, std::list<Player*>& _listDead)
 {
-	tPlayer* pPlayer = m_arrPlayer[_slot];
+	Player* pPlayer = m_arrPlayer[_slot];
 	if (!pPlayer) return;
 
-	tPlayer* pCounterPlayer = nullptr;
+	Player* pCounterPlayer = nullptr;
 
-	const Skill* pSkill = SkillManager::GetInst()->GetSkill(_slot, pPlayer->eSkillName);
+	const Skill* pSkill = SkillManager::GetInst()->GetSkill(_slot, pPlayer->m_eSkillName);
 	if (pSkill->GetType() != eSkillType::Attack) return;
 
 	const SkillAttack* pSkillAttack = static_cast<const SkillAttack*>(pSkill);
@@ -306,21 +307,21 @@ void Game::GetHitResult(int _slot, std::list<tPlayer*>& _list, std::list<tPlayer
 	std::list<std::pair<int, int>>::const_iterator iter = listCoordinates.cbegin();
 	std::list<std::pair<int, int>>::const_iterator iterEnd = listCoordinates.cend();
 
-	std::map<int, tPlayer*>::iterator boardIter;
-	std::map<int, tPlayer*>::iterator boardIterEnd;
+	std::map<int, Player*>::iterator boardIter;
+	std::map<int, Player*>::iterator boardIterEnd;
 
 	int strikePower = pSkillAttack->GetStrikePower();
 
 	for (; iter != iterEnd; ++iter)
 	{
-		if (pPlayer->xpos + iter->first < 0) continue;
-		if (pPlayer->xpos + iter->first >= BoardWidth) continue;
-		if (pPlayer->ypos + iter->second < 0) continue;
-		if (pPlayer->ypos + iter->second >= BoardHeight) continue;
-		if (m_arrBoard[pPlayer->ypos + iter->second][pPlayer->xpos + iter->first].size() == 0) continue;
+		if (pPlayer->m_xpos + iter->first < 0) continue;
+		if (pPlayer->m_xpos + iter->first >= BoardWidth) continue;
+		if (pPlayer->m_ypos + iter->second < 0) continue;
+		if (pPlayer->m_ypos + iter->second >= BoardHeight) continue;
+		if (m_arrBoard[pPlayer->m_ypos + iter->second][pPlayer->m_xpos + iter->first].size() == 0) continue;
 
-		boardIter = m_arrBoard[pPlayer->ypos + iter->second][pPlayer->xpos + iter->first].begin();
-		boardIterEnd = m_arrBoard[pPlayer->ypos + iter->second][pPlayer->xpos + iter->first].end();
+		boardIter = m_arrBoard[pPlayer->m_ypos + iter->second][pPlayer->m_xpos + iter->first].begin();
+		boardIterEnd = m_arrBoard[pPlayer->m_ypos + iter->second][pPlayer->m_xpos + iter->first].end();
 
 		for (; boardIter != boardIterEnd; ++boardIter)
 		{
@@ -329,13 +330,13 @@ void Game::GetHitResult(int _slot, std::list<tPlayer*>& _list, std::list<tPlayer
 			pCounterPlayer = boardIter->second;
 			if (pCounterPlayer)
 			{
-				if (pCounterPlayer->alive)
+				if (pCounterPlayer->m_bAlive)
 				{
-					pCounterPlayer->hp -= strikePower;
-					if (pCounterPlayer->hp <= 0)
+					pCounterPlayer->m_hp -= strikePower;
+					if (pCounterPlayer->m_hp <= 0)
 					{
-						pCounterPlayer->alive = false;
-						pCounterPlayer->hp = 0;
+						pCounterPlayer->m_bAlive = false;
+						pCounterPlayer->m_hp = 0;
 						_listDead.push_back(pCounterPlayer);
 					}
 					else
@@ -362,7 +363,7 @@ void Game::OnNextTurn()
 		for (int i = 0; i < RoomSlotNum; ++i)
 		{
 			if (m_arrPlayer[i])
-				m_arrPlayer[i]->eSkillName = eSkillName::None;
+				m_arrPlayer[i]->m_eSkillName = eSkillName::None;
 		}
 
 		char buffer[255];
@@ -374,20 +375,20 @@ void Game::OnNextTurn()
 
 		curPlayerSlot = UpdateNextTurn();
 	}
-	tPlayer* pCurPlayer = FindPlayer(curPlayerSlot);
+	Player* pCurPlayer = FindPlayer(curPlayerSlot);
 
 	char buffer[255];
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
 	std::list<eSkillName> skillNameList;
-	SkillManager::GetInst()->GetSkillsNotAvailable(pCurPlayer->mana, skillNameList);
+	SkillManager::GetInst()->GetSkillsNotAvailable(pCurPlayer->m_mana, skillNameList);
 	*(char*)(buffer + count) = (char)skillNameList.size();				count += sizeof(char);
 	for (eSkillName name : skillNameList)
 	{
 		*(char*)(buffer + count) = (char)name;				count += sizeof(char);
 	}
 	*(ushort*)buffer = count;
-	send(pCurPlayer->socket, buffer, count, 0);
+	send(pCurPlayer->m_socket, buffer, count, 0);
 }
 
 void Game::OnGameOver()
@@ -397,9 +398,15 @@ void Game::OnGameOver()
 	for (int i = 0; i < RoomSlotNum; i++)
 		if (m_arrPlayer[i])
 		{
-			Session* pSsesion = SessionManager::GetInst()->FindSession(m_arrPlayer[i]->socket);
+			Session* pSsesion = SessionManager::GetInst()->FindSession(m_arrPlayer[i]->m_socket);
 			User* pUser = pSsesion->GetUser();
-			pUser->AddKillCount(m_arrPlayer[i]->score);
+			pUser->AddKillCount(m_arrPlayer[i]->m_score);
 		}
 	SendGameOverPacket();
+}
+
+Player::Player(SOCKET _socket, int _slot, int _xpos, int _ypos) :
+	m_socket(_socket), m_slot(_slot), m_xpos(_xpos), m_ypos(_ypos)
+{
+
 }

@@ -323,7 +323,7 @@ void PacketHandler::C_CheckRoomReady(Session* _pSession, char* _packet)
 		pRoom->SetRoomState(eRoomState::InGame);
 
 		Game* pGame = new Game;
-		tPlayer* pPlayer = nullptr;
+		Player* pPlayer = nullptr;
 		const std::array<Member, 4>& memberList = pRoom->GetMemberList();
 
 		int i = 0;
@@ -336,30 +336,28 @@ void PacketHandler::C_CheckRoomReady(Session* _pSession, char* _packet)
 				pRoom->SetMemberState(member.GetSocket(), eMemberState::Wait);
 			}
 
-			pPlayer = new tPlayer;
-			pPlayer->socket = member.GetSocket();
-			pPlayer->slot = member.GetInfo().slotNumber;
+			int xpos, ypos;
 			if (member.GetInfo().slotNumber == 0)
 			{
-				pPlayer->xpos = 0;
-				pPlayer->ypos = 0;
+				xpos = 0;
+				ypos = 0;
 			}
 			else if (member.GetInfo().slotNumber == 1)
 			{
-				pPlayer->xpos = 4;
-				pPlayer->ypos = 0;
+				xpos = 4;
+				ypos = 0;
 			}
 			else if (member.GetInfo().slotNumber == 2)
 			{
-				pPlayer->xpos = 0;
-				pPlayer->ypos = 3;
+				xpos = 0;
+				ypos = 3;
 			}
 			else if (member.GetInfo().slotNumber == 3)
 			{
-				pPlayer->xpos = 4;
-				pPlayer->ypos = 3;
+				xpos = 4;
+				ypos = 3;
 			}
-			pGame->AddPlayer(pPlayer);
+			pGame->AddPlayer(member.GetSocket(), member.GetInfo().slotNumber, xpos, ypos);
 		}
 
 		GameManager::GetInst()->AddGame(pRoom->GetId(), pGame);
@@ -408,8 +406,8 @@ void PacketHandler::C_InGameReady(Session* _pSession, char* _packet)
 	_pSession->ChangeSessionState(eSessionState::InGame);
 
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
-	tPlayer* player = pGame->FindPlayer(tm->GetInfo().slotNumber);
-	if (player) player->ready = true;
+	Player* player = pGame->FindPlayer(tm->GetInfo().slotNumber);
+	if (player) player->SetReady(true);
 
 	char buffer[255];
 	ushort count = sizeof(ushort);
@@ -598,7 +596,7 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 	if (!pRoom) return;
 	
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
-	tPlayer* pPlayer = pGame->FindPlayer(_pSession);
+	Player* pPlayer = pGame->FindPlayer(_pSession);
 	// 마나 소모시키고, 소모된 마나 패킷으로 전송
 		
 	// pGame->SetSkillType(member->slotNumber, type);
@@ -608,27 +606,27 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 	char buffer[255];
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_Skill;			count += sizeof(ushort);
-	*(char*)(buffer + count) = (char)pPlayer->slot;						count += sizeof(char);
+	*(char*)(buffer + count) = (char)pPlayer->GetSlot();						count += sizeof(char);
 	*(char*)(buffer + count) = (char)type;								count += sizeof(char);
 
 	if (type == eActionType::Move)
 	{
 		eMoveName name = eMoveName(*(char*)_packet);
-		name = pGame->Move(pPlayer->slot, name);
+		name = pGame->Move(pPlayer->GetSlot(), name);
 		*(char*)(buffer + count) = (char)name;							count += sizeof(char);
 
 		if (name != eMoveName::None)
 		{
-			pGame->CheckPortal(pPlayer->slot);
+			pGame->CheckPortal(pPlayer->GetSlot());
 		}
 	}
 	else if(type == eActionType::Skill)
 	{
 		eSkillName name = eSkillName(*(char*)_packet);
-		const Skill* pSkill = SkillManager::GetInst()->GetSkill(pPlayer->slot, name);
-		pPlayer->mana -= pSkill->GetMana();
-		pGame->SetSkillName(pPlayer->slot, name);
-		*(char*)(buffer + count) = (char)pPlayer->mana;			count += sizeof(char);
+		const Skill* pSkill = SkillManager::GetInst()->GetSkill(pPlayer->GetSlot(), name);
+		pPlayer->SetMana(pPlayer->GetMana() - pSkill->GetMana());
+		pGame->SetSkillName(pPlayer->GetSlot(), name);
+		*(char*)(buffer + count) = (char)pPlayer->GetMana();			count += sizeof(char);
 		*(char*)(buffer + count) = (char)name;						count += sizeof(char);
 		const SkillAttack* pAttack = dynamic_cast<const SkillAttack*>(pSkill);
 		if (pAttack)
@@ -638,8 +636,8 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 			int xpos, ypos, size = 0;
 			for (const auto& coor : list)
 			{
-				xpos = pPlayer->xpos + coor.first;
-				ypos = pPlayer->ypos + coor.second;
+				xpos = pPlayer->GetXPos() + coor.first;
+				ypos = pPlayer->GetYPos() + coor.second;
 				if (xpos < 0 || ypos < 0 || xpos >= Game::BoardWidth || ypos >= Game::BoardHeight)
 					continue;
 				*(char*)(buffer + count) = (char)xpos;			count += sizeof(char);
@@ -668,33 +666,33 @@ void PacketHandler::C_NextTurn(Session* _pSession, char* _packet)
 	if (pGame)
 	{
 		// 만약 포탈을 향해 이동하는 모션을 취한 후 보낸 NextTurn인 경우 
-		tPlayer* pPlayer = pGame->FindPlayer(_pSession);
-		if (pPlayer->waitForPortal)
+		Player* pPlayer = pGame->FindPlayer(_pSession);
+		if (pPlayer->IsWaitingForPortal())
 		{
 			char buffer[255];
 			ushort count = sizeof(ushort);
 			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
 			std::list<eSkillName> skillNameList;
-			SkillManager::GetInst()->GetSkillsNotAvailable(pPlayer->mana, skillNameList);
+			SkillManager::GetInst()->GetSkillsNotAvailable(pPlayer->GetMana(), skillNameList);
 			*(char*)(buffer + count) = (char)skillNameList.size();				count += sizeof(char);
 			for (eSkillName name : skillNameList)
 			{
 				*(char*)(buffer + count) = (char)name;				count += sizeof(char);
 			}
 			*(ushort*)buffer = count;
-			send(pPlayer->socket, buffer, count, 0);
+			send(pPlayer->GetSocket(), buffer, count, 0);
 
 			count = sizeof(ushort);
 			*(ushort*)(buffer + count) = (ushort)ePacketType::S_Teleport;			count += sizeof(ushort);
-			*(char*)(buffer + count) = (char)pPlayer->slot;			count += sizeof(char);
-			*(char*)(buffer + count) = (char)pPlayer->xpos;			count += sizeof(char);
-			*(char*)(buffer + count) = (char)pPlayer->ypos;			count += sizeof(char);
+			*(char*)(buffer + count) = (char)pPlayer->GetSlot();			count += sizeof(char);
+			*(char*)(buffer + count) = (char)pPlayer->GetXPos();			count += sizeof(char);
+			*(char*)(buffer + count) = (char)pPlayer->GetYPos();			count += sizeof(char);
 			*(ushort*)buffer = count;
 			pGame->SendAll(buffer);
 
-			printf("S_UpdateTurn : (%d, %d, %d)\n", pPlayer->slot, pPlayer->xpos, pPlayer->ypos);
+			printf("S_UpdateTurn : (%d, %d, %d)\n", pPlayer->GetSlot(), pPlayer->GetXPos(), pPlayer->GetYPos());
 
-			pPlayer->waitForPortal = false;
+			pPlayer->SetWaitForPortal(false);
 			return;
 		}
 
@@ -784,8 +782,8 @@ void PacketHandler::C_Standby(Session* _pSession, char* _packet)
 	const std::array<Member, Game::RoomSlotNum>& memberList = pRoom->GetMemberList();
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
 
-	tPlayer* pPlayer = pGame->FindPlayer(pRoom->GetMemberInfo(_pSession->GetId())->GetInfo().slotNumber);
-	pPlayer->standby = true;
+	Player* pPlayer = pGame->FindPlayer(pRoom->GetMemberInfo(_pSession->GetId())->GetInfo().slotNumber);
+	pPlayer->SetStandby(true);
 
 	if (pGame->IsAllStandby())
 	{
@@ -805,10 +803,10 @@ void PacketHandler::C_CheckHit(Session* _pSession, char* _packet)
 {
 	Room* pRoom = _pSession->GetRoom();
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
-	tPlayer* pPlayer = pGame->FindPlayer(_pSession);
+	Player* pPlayer = pGame->FindPlayer(_pSession);
 	
-	std::list<tPlayer*> hitPlayerList, deadPlayerList;
-	pGame->GetHitResult(pPlayer->slot, hitPlayerList, deadPlayerList);
+	std::list<Player*> hitPlayerList, deadPlayerList;
+	pGame->GetHitResult(pPlayer->GetSlot(), hitPlayerList, deadPlayerList);
 
 	char playerSize = (char)hitPlayerList.size();
 
@@ -820,18 +818,19 @@ void PacketHandler::C_CheckHit(Session* _pSession, char* _packet)
 	// listHitPlayer에서 현재 eSkillType이 Shield인 애들은 type도 보내기
 	for (const auto& player : hitPlayerList)
 	{
-		*(char*)(buffer + count) = (char)player->slot;							count += sizeof(char);
-		*(char*)(buffer + count) = (char)player->hp;							count += sizeof(char);
+		*(char*)(buffer + count) = (char)player->GetSlot();							count += sizeof(char);
+		*(char*)(buffer + count) = (char)player->GetHP();							count += sizeof(char);
 	}
 
 	*(char*)(buffer + count) = (char)deadPlayerList.size();									count += sizeof(char);
 
-	pPlayer->score += deadPlayerList.size();
+	//pPlayer->m_score += deadPlayerList.size();
+	pPlayer->SetScore(pPlayer->GetScore() + deadPlayerList.size());
 
 	for (const auto& player : deadPlayerList)
 	{
-		*(char*)(buffer + count) = (char)player->slot;							count += sizeof(char);
-		pGame->RemovePlayerFromBoard(player->slot);
+		*(char*)(buffer + count) = (char)player->GetSlot();							count += sizeof(char);
+		pGame->RemovePlayerFromBoard(player->GetSlot());
 	}
 	*(ushort*)buffer = count;
 	pGame->SendAll(buffer);
@@ -841,7 +840,7 @@ void PacketHandler::C_CheckHeal(Session* _pSession, char* _packet)
 {
 	Room* pRoom = _pSession->GetRoom();
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
-	tPlayer* pPlayer = pGame->FindPlayer(_pSession);
+	Player* pPlayer = pGame->FindPlayer(_pSession);
 	
 	const Skill* pSkill = SkillManager::GetInst()->GetSkill(0, eSkillName::Heal0); // 현재 단 한 개
 	const SkillHeal* pSkillHeal = static_cast<const SkillHeal*>(pSkill);
@@ -852,19 +851,19 @@ void PacketHandler::C_CheckHeal(Session* _pSession, char* _packet)
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateHeal;			count += sizeof(ushort);
 
 	int healPossible = 1;
-	if (pPlayer->mana >= MPMax)
+	if (pPlayer->GetMana() >= MPMax)
 		healPossible = 0;
 	else
 	{
-		int result = pPlayer->mana + pSkillHeal->GetHeal();
-		pPlayer->mana = result < MPMax ? result : MPMax;
+		int result = pPlayer->GetMana() + pSkillHeal->GetHeal();
+		pPlayer->SetMana(result < MPMax ? result : MPMax);
 	}
 
 	*(char*)(buffer + count) = (char)healPossible;		count += sizeof(char);
 	if (healPossible)
 	{
-		*(char*)(buffer + count) = (char)pPlayer->slot;							count += sizeof(char);
-		*(char*)(buffer + count) = (char)pPlayer->mana;		count += sizeof(char);
+		*(char*)(buffer + count) = (char)pPlayer->GetSlot();							count += sizeof(char);
+		*(char*)(buffer + count) = (char)pPlayer->GetMana();		count += sizeof(char);
 	}
 	*(ushort*)buffer = count;
 	pGame->SendAll(buffer);
@@ -878,7 +877,7 @@ void PacketHandler::C_ExitInGame(Session* _pSession, char* _packet)
 	if (pRoom->GetMemberCount() <= 1) return;
 
 	const Member* pMember = pRoom->GetMemberInfo(_pSession->GetId());
-	tPlayer* pPlayer = pGame->FindPlayer(_pSession);
+	Player* pPlayer = pGame->FindPlayer(_pSession);
 
 	char buffer[255];
 	ushort count = sizeof(ushort);
@@ -894,7 +893,7 @@ void PacketHandler::C_ExitInGame(Session* _pSession, char* _packet)
 
 	}
 	User* pUser = _pSession->GetUser();
-	pUser->AddKillCount(pPlayer->score);
+	pUser->AddKillCount(pPlayer->GetScore());
 	_pSession->SetRoom(nullptr);
 	_pSession->ChangeSessionState(eSessionState::Lobby);
 	pGame->RemovePlayer(pMember->GetInfo().slotNumber);

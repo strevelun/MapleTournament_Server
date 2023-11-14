@@ -11,14 +11,31 @@
 class User;
 class Room;
 
-typedef struct _unpPacket
-{
-	char unprocessedPacket[255];
-	int size = 0;
-} UnpPacket;
+
 
 class Session
 {
+private:
+	class Packet
+	{
+	private:
+		friend class Session;
+
+	private:
+		static constexpr int LeastSize = sizeof(u_short) + sizeof(u_short);
+		static constexpr int BufferSize = 255;
+
+	private:
+		char buffer[BufferSize];
+		char tempBuffer[BufferSize];
+		int size = 0;
+		int startPos = 0;
+		int endPos = 0;
+
+	private:
+		void MoveRight(int _byteCount);
+	};
+
 private:
 	unsigned int m_id;
 	eSessionState m_eState = eSessionState::Login;
@@ -26,7 +43,7 @@ private:
 	Room* m_pRoom = nullptr;
 	SOCKET			m_socket;
 
-	UnpPacket m_unpPacket = {};
+	Packet m_packet;
 
 	static std::map<ePacketType, void(*)(Session*, char*)> m_mapPacketHandlerCallback;
 
@@ -44,9 +61,7 @@ public:
 	void SetUser(User* _pUser) { m_pUser = _pUser; }
 	void SetRoom(Room* _pRoom) { m_pRoom = _pRoom; }
 
-	void ProcessPacket(ePacketType _eType, char* _pPacket);
-
-	void SaveUnprocessedPacket(char* _pPacket, int _totalSize);
-	void LoadUnprocessedPacket(char* _pPacket, int& _totalSize);
+	void ProcessPacket();
+	int ReceivePacket();
 };
 	
