@@ -105,7 +105,7 @@ public:
 	bool IsAllStandby() const;
 	bool IsEnd() const { return m_isEnd; }
 
-	void CheckPortal(int _slot);
+	void CheckPortal(u_int _slot);
 
 	int UpdateNextTurn();
 	void UpdatePortal();

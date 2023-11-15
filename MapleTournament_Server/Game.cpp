@@ -115,8 +115,10 @@ bool Game::IsAllStandby() const
 	return true;
 }
 
-void Game::CheckPortal(int _slot)
+void Game::CheckPortal(u_int _slot)
 {
+	if (_slot >= RoomSlotNum) return;
+
 	if (m_arrPlayer[_slot]->m_xpos == m_portalPosition.first && m_arrPlayer[_slot]->m_ypos == m_portalPosition.second)
 	{
 		// 플레이어 랜덤 이동시키고 한번 더 턴을 줌. 그리고 포탈은 비활성화
