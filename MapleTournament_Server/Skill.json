@@ -38,7 +38,7 @@
       [ 0, 1 ],
       [ 1, 1 ]
     ],
-    "strikePower": 2,
+    "strikePower": 3,
     "inversed": false
   },
   {
@@ -61,6 +61,19 @@
       [ 0, 0 ]
     ],
     "strikePower": 10,
+    "inversed": false
+  },
+  {
+    "type": "Attack",
+    "name": "Attack4",
+    "mana": 3,
+    "coordinates": [
+      [ -1, -1 ],
+      [ 1, -1 ],
+      [ -1, 1 ],
+      [ 1, 1 ]
+    ],
+    "strikePower": 4,
     "inversed": false
   },
   {

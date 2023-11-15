@@ -122,6 +122,7 @@ eSkillName SkillManager::GetSkillName(const std::string& _name)
 	if (_name == "Attack1") return eSkillName::Attack1;
 	if (_name == "Attack2") return eSkillName::Attack2;
 	if (_name == "Attack3") return eSkillName::Attack3;
+	if (_name == "Attack4") return eSkillName::Attack4;
 	if (_name == "Heal0") return eSkillName::Heal0;
 
     return eSkillName::None;
