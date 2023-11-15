@@ -103,7 +103,7 @@ const Skill* SkillManager::GetSkill(int _slot, eSkillName _type) const
     return iter->second;
 }
 
-void SkillManager::GetSkillsNotAvailable(int _playerMP, std::list<eSkillName>& _listSkillName)
+void SkillManager::GetSkillsNotAvailable(int _playerMP, std::vector<eSkillName>& _listSkillName)
 {
     std::map<eSkillName, Skill*>::const_iterator iter = m_mapSkill.cbegin();
     std::map<eSkillName, Skill*>::const_iterator iterEnd = m_mapSkill.cend();

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include <list>
+#include <vector>
 
 #include "../Defines.h"
 #include "../Setting.h"

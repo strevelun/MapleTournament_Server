@@ -5,7 +5,6 @@
 
 #include <string>
 #include <map>
-#include <list>
 #include <json/json.h>
 
 class Skill;
@@ -18,7 +17,7 @@ private:
 public:
 	bool Init();
 	const Skill* GetSkill(int _slot, eSkillName _type) const;
-	void GetSkillsNotAvailable(int _playerMP, std::list<eSkillName>& _listSkillName);
+	void GetSkillsNotAvailable(int _playerMP, std::vector<eSkillName>& _listSkillName);
 
 private:
 	eSkillName GetSkillName(const std::string& _name);

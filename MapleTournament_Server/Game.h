@@ -4,7 +4,6 @@
 #include <array>
 #include <vector>
 #include <map>
-#include <list>
 
 #include "Setting.h"
 
@@ -114,15 +113,9 @@ public:
 	void SendAll(char* _buffer);
 	void SendGameOverPacket();
 
-	void SetPlayerMana();
-	void SetPlayerReady();
-	void SetPlayerWaitForPortal();
-	void SetPlayerStandBy();
-	void SetPlayerScore();
-
 public:
 	eMoveName Move(int _slot, eMoveName _name);// slot으로 플레이어 구분
-	void GetHitResult(int _slot, std::list<Player*>& _list, std::list<Player*>& _listDead);
+	void GetHitResult(int _slot, std::vector<Player*>& _list, std::vector<Player*>& _listDead);
 	void OnNextTurn();
 
 private:

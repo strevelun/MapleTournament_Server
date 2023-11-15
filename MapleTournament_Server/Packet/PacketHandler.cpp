@@ -634,7 +634,7 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 		const SkillAttack* pAttack = dynamic_cast<const SkillAttack*>(pSkill);
 		if (pAttack)
 		{
-			const std::list<std::pair<int, int>>& list = pAttack->GetListCoordinates();
+			const std::vector<std::pair<int, int>>& list = pAttack->GetListCoordinates();
 			char* listSize = (char*)(buffer + count);			count += sizeof(char);
 			int xpos, ypos, size = 0;
 			for (const auto& coor : list)
@@ -675,7 +675,7 @@ void PacketHandler::C_NextTurn(Session* _pSession, char* _packet)
 			char buffer[255];
 			ushort count = sizeof(ushort);
 			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
-			std::list<eSkillName> skillNameList;
+			std::vector<eSkillName> skillNameList;
 			SkillManager::GetInst()->GetSkillsNotAvailable(pPlayer->GetMana(), skillNameList);
 			*(char*)(buffer + count) = (char)skillNameList.size();				count += sizeof(char);
 			for (eSkillName name : skillNameList)
@@ -808,7 +808,7 @@ void PacketHandler::C_CheckHit(Session* _pSession, char* _packet)
 	Game* pGame = GameManager::GetInst()->FindGame(pRoom->GetId());
 	Player* pPlayer = pGame->FindPlayer(_pSession);
 	
-	std::list<Player*> hitPlayerList, deadPlayerList;
+	std::vector<Player*> hitPlayerList, deadPlayerList;
 	pGame->GetHitResult(pPlayer->GetSlot(), hitPlayerList, deadPlayerList);
 
 	char playerSize = (char)hitPlayerList.size();

@@ -290,7 +290,7 @@ eMoveName Game::Move(int _slot, eMoveName _name)
 	return _name;
 }
 
-void Game::GetHitResult(int _slot, std::list<Player*>& _list, std::list<Player*>& _listDead)
+void Game::GetHitResult(int _slot, std::vector<Player*>& _list, std::vector<Player*>& _listDead)
 {
 	Player* pPlayer = m_arrPlayer[_slot];
 	if (!pPlayer) return;
@@ -302,10 +302,10 @@ void Game::GetHitResult(int _slot, std::list<Player*>& _list, std::list<Player*>
 
 	const SkillAttack* pSkillAttack = static_cast<const SkillAttack*>(pSkill);
 
-	const std::list<std::pair<int, int>>& listCoordinates = pSkillAttack->GetListCoordinates();
+	const std::vector<std::pair<int, int>>& listCoordinates = pSkillAttack->GetListCoordinates();
 
-	std::list<std::pair<int, int>>::const_iterator iter = listCoordinates.cbegin();
-	std::list<std::pair<int, int>>::const_iterator iterEnd = listCoordinates.cend();
+	std::vector<std::pair<int, int>>::const_iterator iter = listCoordinates.cbegin();
+	std::vector<std::pair<int, int>>::const_iterator iterEnd = listCoordinates.cend();
 
 	std::map<int, Player*>::iterator boardIter;
 	std::map<int, Player*>::iterator boardIterEnd;
@@ -380,7 +380,7 @@ void Game::OnNextTurn()
 	char buffer[255];
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
-	std::list<eSkillName> skillNameList;
+	std::vector<eSkillName> skillNameList;
 	SkillManager::GetInst()->GetSkillsNotAvailable(pCurPlayer->m_mana, skillNameList);
 	*(char*)(buffer + count) = (char)skillNameList.size();				count += sizeof(char);
 	for (eSkillName name : skillNameList)
