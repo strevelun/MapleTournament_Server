@@ -139,16 +139,16 @@
     <ClCompile Include="Managers\SessionManager.cpp" />
     <ClCompile Include="Managers\SkillManager.cpp" />
     <ClCompile Include="Managers\UserManager.cpp" />
-    <ClCompile Include="Network\Room.cpp" />
     <ClCompile Include="Network\Selector.cpp" />
     <ClCompile Include="Network\Session.cpp" />
     <ClCompile Include="Network\TCPListener.cpp" />
-    <ClCompile Include="Network\User.cpp" />
     <ClCompile Include="Packet\PacketHandler.cpp" />
+    <ClCompile Include="Room\Room.cpp" />
     <ClCompile Include="ServerApp.cpp" />
-    <ClCompile Include="Skill.cpp" />
-    <ClCompile Include="SkillAttack.cpp" />
-    <ClCompile Include="SkillHeal.cpp" />
+    <ClCompile Include="Skill\Skill.cpp" />
+    <ClCompile Include="Skill\SkillAttack.cpp" />
+    <ClCompile Include="Skill\SkillHeal.cpp" />
+    <ClCompile Include="User\User.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dist\json\json-forwards.h" />
@@ -160,17 +160,17 @@
     <ClInclude Include="Managers\SessionManager.h" />
     <ClInclude Include="Managers\SkillManager.h" />
     <ClInclude Include="Managers\UserManager.h" />
-    <ClInclude Include="Network\Room.h" />
     <ClInclude Include="Network\Selector.h" />
     <ClInclude Include="Network\Session.h" />
     <ClInclude Include="Network\TCPListener.h" />
-    <ClInclude Include="Network\User.h" />
     <ClInclude Include="Packet\PacketHandler.h" />
+    <ClInclude Include="Room\Room.h" />
     <ClInclude Include="ServerApp.h" />
     <ClInclude Include="Setting.h" />
-    <ClInclude Include="Skill.h" />
-    <ClInclude Include="SkillAttack.h" />
-    <ClInclude Include="SkillHeal.h" />
+    <ClInclude Include="Skill\Skill.h" />
+    <ClInclude Include="Skill\SkillAttack.h" />
+    <ClInclude Include="Skill\SkillHeal.h" />
+    <ClInclude Include="User\User.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

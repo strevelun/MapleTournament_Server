@@ -6,7 +6,7 @@
 
 #include "../Defines.h"
 
-#include "../Network/Room.h"
+#include "../Room/Room.h"
 
 class RoomManager
 {

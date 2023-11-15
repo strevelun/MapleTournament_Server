@@ -1,7 +1,7 @@
 #include "SkillManager.h"
-#include "../Skill.h"
-#include "../SkillAttack.h"
-#include "../SkillHeal.h"
+#include "../Skill/Skill.h"
+#include "../Skill/SkillAttack.h"
+#include "../Skill/SkillHeal.h"
 
 #include <fstream>
 

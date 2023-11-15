@@ -1,6 +1,6 @@
 #include "SessionManager.h"
 #include "UserManager.h"
-#include "../Network/User.h"
+#include "../User/User.h"
 
 SessionManager* SessionManager::m_pInst = nullptr;
 

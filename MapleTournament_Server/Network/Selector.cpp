@@ -2,7 +2,7 @@
 #include "../Managers/SessionManager.h"
 #include "../Managers/UserManager.h"
 #include "../Network/Session.h"
-#include "User.h"
+#include "../User/User.h"
 
 Selector::Selector(SOCKET _hSocketServer)
 	: m_hSocketServer(_hSocketServer)

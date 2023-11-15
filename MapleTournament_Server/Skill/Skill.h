@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Setting.h"
+#include "../Setting.h"
 
 class Skill
 {

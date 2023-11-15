@@ -4,7 +4,7 @@
 #include "Managers/SessionManager.h"
 #include "Managers/GameManager.h"
 #include "Managers/SkillManager.h"
-#include "Network/User.h"
+#include "User/User.h"
 
 #include <iostream>
 

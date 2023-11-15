@@ -1,5 +1,5 @@
 #include "UserManager.h"
-#include "../Network/User.h"
+#include "../User/User.h"
 
 UserManager* UserManager::m_pInst = nullptr;
 

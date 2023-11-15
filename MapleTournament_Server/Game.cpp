@@ -4,9 +4,9 @@
 #include "Managers/SkillManager.h"
 #include "Managers/SessionManager.h"
 #include "Network/Session.h"
-#include "Network/User.h"
-#include "Skill.h"
-#include "SkillAttack.h"
+#include "User/User.h"
+#include "Skill/Skill.h"
+#include "Skill/SkillAttack.h"
 
 typedef unsigned short ushort;
 
