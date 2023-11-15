@@ -508,7 +508,8 @@ void PacketHandler::C_UpdateUserListPage(Session* _pSession, char* _packet)
 void PacketHandler::C_UpdateRoomListPage(Session* _pSession, char* _packet)
 {
 	const int roomListPageViewCount = 10;
-	const std::map<unsigned int, Room*>& roomList = RoomManager::GetInst()->GetRoomList();
+	std::vector<Room*> roomList;
+	RoomManager::GetInst()->GetRoomList(roomList);
 	size_t roomListSize = roomList.size();
 	int numOfRoom = 0;
 
@@ -537,8 +538,8 @@ void PacketHandler::C_UpdateRoomListPage(Session* _pSession, char* _packet)
 	int tempCount = count;
 	count += sizeof(char);
 
-	std::map<unsigned int, Room*>::const_iterator iter = roomList.begin();
-	std::map<unsigned int, Room*>::const_iterator iterEnd = roomList.end();
+	std::vector<Room*>::iterator iter = roomList.begin();
+	std::vector<Room*>::iterator iterEnd = roomList.end();
 
 	std::advance(iter, minCount);
 
@@ -550,17 +551,17 @@ void PacketHandler::C_UpdateRoomListPage(Session* _pSession, char* _packet)
 		if (numOfRoom >= roomListSize) break;
 		if (numOfRoom >= roomListPageViewCount) break;
 
-		*(u_int*)(buffer + count) = iter->second->GetId();			count += sizeof(u_int);
-		*(ushort*)(buffer + count) = (ushort)iter->second->GetRoomState();			count += sizeof(ushort);
-		const wchar_t* title = iter->second->GetRoomTitle();
+		*(u_int*)(buffer + count) = (*iter)->GetId();			count += sizeof(u_int);
+		*(ushort*)(buffer + count) = (ushort)(*iter)->GetRoomState();			count += sizeof(ushort);
+		const wchar_t* title = (*iter)->GetRoomTitle();
 		memcpy(buffer + count, title, wcslen(title) * 2);			count += (ushort)wcslen(title) * 2;
 		*(wchar_t*)(buffer + count) = L'\0';									count += 2;
-		const Member* member = iter->second->GetRoomOwner();
+		const Member* member = (*iter)->GetRoomOwner();
 		pUser = member->GetInfo().pUser;
 		pOwnerNickname = pUser->GetNickname();
 		memcpy(buffer + count, pOwnerNickname, wcslen(pOwnerNickname) * 2);			count += (ushort)wcslen(pOwnerNickname) * 2;
 		*(wchar_t*)(buffer + count) = L'\0';									count += 2;
-		*(ushort*)(buffer + count) = (ushort)iter->second->GetMemberCount();			count += sizeof(ushort);
+		*(ushort*)(buffer + count) = (ushort)(*iter)->GetMemberCount();			count += sizeof(ushort);
 	}	
 
 	*(char*)(buffer + tempCount) = (char)numOfRoom;

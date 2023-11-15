@@ -2,16 +2,9 @@
 #include "User.h"
 #include "Session.h"
 
-Room::Room(unsigned int _id, wchar_t* _strTitle)
-	: m_id(_id)
+Room::Room()
 {
-	wcsncpy_s(m_strTitle, sizeof(m_strTitle) / sizeof(wchar_t), _strTitle, sizeof(m_strTitle) / sizeof(wchar_t) - 1);
-	size_t size = m_arrMember.size();
-	for (int i = 0; i < size; i++)
-	{
-		m_arrMember[i].m_stInfo.slotNumber = i;
-		m_arrMemberExist[i] = false;
-	}
+	
 }
 
 Room::~Room()
@@ -19,12 +12,21 @@ Room::~Room()
 	
 }
 
+void Room::Init()
+{
+	for (int i = 0; i < SlotSize; i++)
+	{
+		m_arrMember[i].m_stInfo.slotNumber = i;
+		m_arrMemberExist[i] = false;
+	}
+	m_memberCount = 0;
+}
+
 void Room::AddMember(Session* _pSession, eMemberType _eType)
 {
-	if (m_memberCount >= 4) return;
+	if (m_memberCount >= SlotSize) return;
 
-	unsigned int size = m_arrMember.size();
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < SlotSize; i++)
 	{
 		if (!m_arrMemberExist[i])
 		{
@@ -44,10 +46,9 @@ void Room::AddMember(Session* _pSession, eMemberType _eType)
 // 방장이면 다른사람이 방장
 void Room::LeaveMember(Session* _pSession)
 {
-	unsigned int size = m_arrMember.size();
 	int i = 0;
 	bool isOwner = false;
-	for (; i < size; i++)
+	for (; i < SlotSize; i++)
 	{
 		if (m_arrMember[i].m_id == _pSession->GetId())
 		{
@@ -65,7 +66,7 @@ void Room::LeaveMember(Session* _pSession)
 
 	if (isOwner)
 	{
-		for (i = 0; i < size; i++)
+		for (i = 0; i < SlotSize; i++)
 		{
 			if (!m_arrMemberExist[i]) continue;
 			m_arrMember[i].m_stInfo.eType = eMemberType::Owner;
@@ -73,23 +74,10 @@ void Room::LeaveMember(Session* _pSession)
 		}
 	}
 }
-/*
-unsigned int Room::GetUserCount() const
-{
-	int count = 0;
-	unsigned int size = m_arrUser.size();
-	for (int i = 0; i < size; i++)
-	{
-		if (m_arrUser[i].pUser == nullptr) continue;
-		count++;
-	}
-	return count;
-}
-*/
+
 const Member* Room::GetRoomOwner() const
 {
-	unsigned int size = m_arrMember.size();
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < SlotSize; i++)
 	{
 		if (m_arrMember[i].GetInfo().eType == eMemberType::Owner)
 			return &m_arrMember[i];
@@ -99,13 +87,22 @@ const Member* Room::GetRoomOwner() const
 
 const Member* Room::GetMemberInfo(unsigned int _id)
 {
-	size_t size = m_arrMember.size();
-	for (size_t i = 0; i < size; i++)
+	for (size_t i = 0; i < SlotSize; i++)
 	{
 		if (m_arrMember[i].m_id == _id)
 			return &m_arrMember[i];
 	}
 	return nullptr;
+}
+
+void Room::SetId(unsigned int _id)
+{
+	m_id = _id;
+}
+
+void Room::SetTitle(wchar_t* _strTitle)
+{
+	wcsncpy_s(m_strTitle, sizeof(m_strTitle) / sizeof(wchar_t), _strTitle, sizeof(m_strTitle) / sizeof(wchar_t) - 1);
 }
 
 void Room::SetRoomState(eRoomState _state)
@@ -115,8 +112,7 @@ void Room::SetRoomState(eRoomState _state)
 
 void Room::SetMemberState(unsigned int _id, eMemberState _state)
 {
-	size_t size = m_arrMember.size();
-	for (size_t i = 0; i < size; i++)
+	for (size_t i = 0; i < SlotSize; i++)
 	{
 		if (m_arrMember[i].m_id == _id)
 		{
@@ -128,8 +124,7 @@ void Room::SetMemberState(unsigned int _id, eMemberState _state)
 
 void Room::SetMemberChoice(unsigned int _id, int _choice)
 {
-	size_t size = m_arrMember.size();
-	for (size_t i = 0; i < size; i++)
+	for (size_t i = 0; i < SlotSize; i++)
 	{
 		if (m_arrMember[i].m_id == _id)
 		{
@@ -146,9 +141,8 @@ bool Room::IsMemberExist(int _slot)
 
 bool Room::IsRoomReady()
 {
-	size_t size = m_arrMember.size();
 	if (m_memberCount <= 1) return false;
-	for (size_t i = 0; i < size; i++)
+	for (size_t i = 0; i < SlotSize; i++)
 	{
 		if (m_arrMember[i].m_stInfo.eState == eMemberState::Wait && m_arrMember[i].m_stInfo.eType == eMemberType::Member)
 				return false;
@@ -158,8 +152,7 @@ bool Room::IsRoomReady()
 
 void Room::SendAll(char* _buffer, Session* _pExceptSession)
 {
-	size_t size = m_arrMember.size();
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < SlotSize; i++)
 	{
 		if (!m_arrMemberExist[i]) continue;
 		if (_pExceptSession && _pExceptSession->GetSocket() == m_arrMember[i].m_socket) continue;

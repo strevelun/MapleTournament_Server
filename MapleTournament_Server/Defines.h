@@ -18,3 +18,5 @@ public: \
 	} 
 
 #define GAME_MAX_ROUND			30
+#define ROOM_MAX_SIZE			63
+#define SESSION_MAX_SIZE		64

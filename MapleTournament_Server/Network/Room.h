@@ -53,16 +53,21 @@ public:
 
 class Room
 {
+public:
+	static constexpr int SlotSize = 4;
+private:
 	unsigned int m_id = 0; 
-	eRoomState m_eState = eRoomState::Ready;
+	eRoomState m_eState = eRoomState::None;
 	wchar_t m_strTitle[20];
-	std::array<Member, 4>		 m_arrMember;
-	std::array<bool, 4>		 m_arrMemberExist;
+	std::array<Member, SlotSize>		 m_arrMember;
+	std::array<bool, SlotSize>		 m_arrMemberExist;
 	unsigned int m_memberCount = 0;
 
 public:
-	Room(unsigned int _id, wchar_t* _strTitle);
+	Room();
 	~Room();
+
+	void Init();
 
 	void AddMember(Session* _pSession, eMemberType _eType = eMemberType::Member);
 	void LeaveMember(Session* _pSession);
@@ -72,12 +77,13 @@ public:
 	const wchar_t* GetRoomTitle() const { return m_strTitle; }
 	unsigned int GetMemberCount() const { return m_memberCount; }
 	const Member* GetRoomOwner() const;
-	const std::array<Member, 4>& GetMemberList() const { return m_arrMember; }
+	const std::array<Member, SlotSize>& GetMemberList() const { return m_arrMember; }
 	const Member* GetMemberInfo(unsigned int _id);
 
+	void SetId(unsigned int _id);
+	void SetTitle(wchar_t* _strTitle);
 	void SetRoomState(eRoomState _state);
 	void SetMemberState(unsigned int _id, eMemberState _state);
-
 	void SetMemberChoice(unsigned int _id, int _choice);
 
 	bool IsMemberExist(int _slot);

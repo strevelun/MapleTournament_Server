@@ -9,15 +9,13 @@ typedef unsigned short ushort;
 
 SessionManager::SessionManager()
 {
-	m_vecSession.reserve(64);
+	m_vecSession.reserve(SESSION_MAX_SIZE);
 }
 
 SessionManager::~SessionManager()
 {
 	for (auto& s : m_vecSession)
-	{
 		delete s;
-	}
 }
 
 bool SessionManager::Init(SOCKET _hSocketServer)
@@ -29,7 +27,7 @@ bool SessionManager::Init(SOCKET _hSocketServer)
 
 bool SessionManager::AddSession(SOCKET _socket)
 {
-	if (m_vecSession.size() >= 64) return false;
+	if (m_vecSession.size() >= SESSION_MAX_SIZE) return false;
 
 	Session* pSession = new Session(m_sessionId++, _socket);
 

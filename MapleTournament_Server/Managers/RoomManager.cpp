@@ -1,11 +1,12 @@
 #include "RoomManager.h"
-#include "../Network/Room.h"
 
 RoomManager* RoomManager::m_pInst = nullptr;
-unsigned int RoomManager::m_roomId = 0;
 
 RoomManager::RoomManager()
 {
+	m_vecInactiveRoomId.resize(ROOM_MAX_SIZE, 0);
+	for (int i = ROOM_MAX_SIZE - 1, j = 0; i >= 0; i--, j++)
+		m_vecInactiveRoomId[i] = j;
 }
 
 RoomManager::~RoomManager()
@@ -14,18 +15,25 @@ RoomManager::~RoomManager()
 
 Room* RoomManager::CreateRoom(wchar_t* _strTitle)
 {
-	Room* pRoom = new Room(m_roomId, _strTitle);
-	m_mapRoom.insert({m_roomId++, pRoom}); 
+	if (m_count >= ROOM_MAX_SIZE) return nullptr;
+	
+	unsigned int id = m_vecInactiveRoomId.back();
+	m_vecInactiveRoomId.pop_back();
 
-	return pRoom;
+	m_arrRoom[id].Init();
+	m_arrRoom[id].SetRoomState(eRoomState::Ready);
+	m_arrRoom[id].SetId(id);
+	m_arrRoom[id].SetTitle(_strTitle);
+	m_count++;
+
+	return &m_arrRoom[id];
 }
 
 Room* RoomManager::FindRoom(unsigned int _roomId)
 {
-	std::map<unsigned int, Room*>::iterator iter = m_mapRoom.find(_roomId);
-	if (iter != m_mapRoom.end())	return iter->second;
+	if (m_arrRoom[_roomId].GetRoomState() == eRoomState::None) return nullptr;
 
-	return nullptr;
+	return &m_arrRoom[_roomId];
 }
 
 bool RoomManager:: DeleteRoom(unsigned int _roomId)
@@ -33,8 +41,18 @@ bool RoomManager:: DeleteRoom(unsigned int _roomId)
 	Room* pRoom = FindRoom(_roomId);
 	if (!pRoom)		return false;
 
-	delete pRoom;
-	m_mapRoom.erase(_roomId);
-
+	m_arrRoom[_roomId].SetRoomState(eRoomState::None);
+	m_vecInactiveRoomId.push_back(_roomId);
+	m_count--;
 	return true;
+}
+
+void RoomManager::GetRoomList(std::vector<Room*>& _vecRoom)
+{
+	for (int i = 0; i < ROOM_MAX_SIZE; i++)
+	{
+		if (m_arrRoom[i].GetRoomState() == eRoomState::None) continue;
+
+		_vecRoom.push_back(&m_arrRoom[i]);
+	}
 }
