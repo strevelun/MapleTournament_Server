@@ -41,7 +41,7 @@ bool RoomManager:: DeleteRoom(unsigned int _roomId)
 	Room* pRoom = FindRoom(_roomId);
 	if (!pRoom)		return false;
 
-	m_arrRoom[_roomId].SetRoomState(eRoomState::None);
+	pRoom->SetRoomState(eRoomState::None);
 	m_vecInactiveRoomId.push_back(_roomId);
 	m_count--;
 	return true;
@@ -49,10 +49,10 @@ bool RoomManager:: DeleteRoom(unsigned int _roomId)
 
 void RoomManager::GetRoomList(std::vector<Room*>& _vecRoom)
 {
-	for (int i = 0; i < ROOM_MAX_SIZE; i++)
+	for (auto& room : m_arrRoom)
 	{
-		if (m_arrRoom[i].GetRoomState() == eRoomState::None) continue;
+		if (room.GetRoomState() == eRoomState::None) continue;
 
-		_vecRoom.push_back(&m_arrRoom[i]);
+		_vecRoom.push_back(&room);
 	}
 }

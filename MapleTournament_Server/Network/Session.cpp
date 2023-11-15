@@ -26,14 +26,21 @@ std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallb
 	{ ePacketType::C_ExitInGame, PacketHandler::C_ExitInGame },
 };
 
-Session::Session(unsigned int _id, SOCKET _socket) :
-	m_id(_id), m_socket(_socket)
+Session::Session()
 {
 
 }
 
 Session::~Session()
 {
+}
+
+void Session::Init()
+{
+	m_packet.Init();
+	m_pUser = nullptr;
+	m_pRoom = nullptr;
+	m_socket = 0;
 }
 
 void Session::ProcessPacket()
@@ -104,6 +111,13 @@ int Session::ReceivePacket()
 	//printf("ReceivePacket %d : (%d ~ %d)\n", m_stPacket.size, m_stPacket.startPos, m_stPacket.endPos);
 
 	return recvSize + extraRecvSize;
+}
+
+void Session::Packet::Init()
+{
+	size = 0;
+	startPos = 0;
+	endPos = 0;
 }
 
 void Session::Packet::MoveRight(int _byteCount)

@@ -3,28 +3,29 @@
 #include <vector>
 #include <winsock2.h>
 #include <string>
+#include <array>
 
 #include "../Setting.h"
 #include "../Defines.h"
 #include "../Network/Selector.h"
-
-class Session;
+#include "../Network/Session.h"
 
 class SessionManager
 {
 private:
-	int m_sessionId = 0;
-	std::vector<Session*> m_vecSession; 
+	unsigned int m_count = 0;
+	std::array<Session, CLIENT_SESSION_MAX_SIZE> m_arrSession;
+	std::vector<unsigned int> m_vecLeftId;
 	fd_set_ex			m_fdUser;
 
 public:
 	bool Init(SOCKET _hSocketServer);
 
-	bool AddSession(SOCKET _socket);
+	bool RegisterSession(SOCKET _socket);
 	Session* FindSession(SOCKET _socket);
 	bool RemoveSession(SOCKET _socket);
 
-	const std::vector<Session*>& GetVecSession() const { return m_vecSession; }
+	void GetVecSession(std::vector<Session*>& _vecSession);
 	u_int GetLoginedUserCount() const;
 	const fd_set_ex& GetFDUser() const { return m_fdUser; }
 

@@ -19,7 +19,7 @@ void Selector::Select()
 {
 	SOCKET clientSocket;
 	int packetLeastSize = sizeof(u_short) + sizeof(u_short);
-	int					recvSize, totalSize = 0;
+	int					recvSize = 0, totalSize = 0;
 	u_short				packetSize = 0;
 
 	timeval timeout = { 0, 0 };
@@ -38,18 +38,17 @@ void Selector::Select()
 		{
 			if (clientSocket == m_hSocketServer)
 			{
-				if (m_fdReads.fd_count >= FD_SETSIZE)
-				{
-					printf("현재 서버소켓 포함 총 %d개이기 때문에 접속 거부됨. (최대 64개)\n", m_fdReads.fd_count);
-					continue;
-				}
-
 				SOCKADDR_IN			addrClient;
 				int addrSize = sizeof(addrClient);
 				SOCKET acceptedClientSocket = accept(m_hSocketServer, (SOCKADDR*)&addrClient, &addrSize);
 				printf("%d, (%d.%d.%d.%d) %d 연결됨\n", (int)acceptedClientSocket, addrClient.sin_addr.S_un.S_un_b.s_b1, addrClient.sin_addr.S_un.S_un_b.s_b2, addrClient.sin_addr.S_un.S_un_b.s_b3, addrClient.sin_addr.S_un.S_un_b.s_b4, addrClient.sin_port);
 				
-				SessionManager::GetInst()->AddSession(acceptedClientSocket);
+				if (!SessionManager::GetInst()->RegisterSession(acceptedClientSocket))
+				{
+					printf("현재 서버소켓 포함 총 64개이기 때문에 접속 거부됨. (최대 64개)\n");
+					closesocket(acceptedClientSocket);
+					printf("%d 로그아웃 됨\n", (int)acceptedClientSocket);
+				}
 			}
 			else
 			{

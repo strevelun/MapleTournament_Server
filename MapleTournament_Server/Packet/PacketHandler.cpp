@@ -29,11 +29,12 @@ void PacketHandler::C_OKLogin(Session* _pSession, char* _packet)
 
 	// 접속중인 세션들을 돌면서 해당 닉네임을 가지는 세션이 있는지 확인
 	bool isNicknameUsed = false;
-	const std::vector<Session*>& vecSession = SessionManager::GetInst()->GetVecSession();
+	std::vector<Session*> vecSession;
+	SessionManager::GetInst()->GetVecSession(vecSession);
 	u_int size = vecSession.size();
-	for (int i = 0; i < size; i++)
+	for(auto& session : vecSession)
 	{
-		pUser = vecSession[i]->GetUser();
+		pUser = session->GetUser();
 		if (pUser && wcscmp(pUser->GetNickname(), nickname) == 0)
 		{
 			isNicknameUsed = true;
@@ -448,7 +449,8 @@ void PacketHandler::C_InGameReady(Session* _pSession, char* _packet)
 void PacketHandler::C_UpdateUserListPage(Session* _pSession, char* _packet)
 {
 	const int userListPageViewCount = 9;
-	const std::vector<Session*>& vecSession = SessionManager::GetInst()->GetVecSession();
+	std::vector<Session*> vecSession;
+	SessionManager::GetInst()->GetVecSession(vecSession);
 	size_t size = vecSession.size();
 	int newPage = *(char*)_packet;
 
@@ -470,15 +472,15 @@ void PacketHandler::C_UpdateUserListPage(Session* _pSession, char* _packet)
 	count += sizeof(char);
 
 	loginedUserCount = 0;
-	for (size_t i = 0; i < size; i++)
+	for(auto& session : vecSession)
 	{
-		eSessionState eState = vecSession[i]->GetSessionState();
+		eSessionState eState = session->GetSessionState();
 		if (eState == eSessionState::Login) continue;
 
 		loginedUserCount++;
 		if (loginedUserCount <= minCount) continue;
 
-		User* pUser = vecSession[i]->GetUser();
+		User* pUser = session->GetUser();
 		const wchar_t* nickname = pUser->GetNickname();
 		memcpy(buffer + count, nickname, wcslen(nickname) * 2);				count += (ushort)wcslen(nickname) * 2;
 		*(wchar_t*)(buffer + count) = L'\0';								count += 2;
@@ -489,7 +491,7 @@ void PacketHandler::C_UpdateUserListPage(Session* _pSession, char* _packet)
 		}
 		else
 		{
-			Room* pRoom = vecSession[i]->GetRoom();
+			Room* pRoom = session->GetRoom();
 			if(pRoom) 
 				*(u_int*)(buffer + count) = pRoom->GetId();
 			count += sizeof(u_int);
