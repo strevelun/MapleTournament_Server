@@ -47,6 +47,7 @@ private:
 	_stInfo		m_stInfo;
 
 public:
+	unsigned int GetId() const { return m_id; }
 	SOCKET GetSocket() const { return m_socket; }
 	const _stInfo& GetInfo() const { return m_stInfo; }
 };

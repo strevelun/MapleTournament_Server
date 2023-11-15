@@ -38,7 +38,7 @@ void Selector::Select()
 		{
 			if (clientSocket == m_hSocketServer)
 			{
-				SOCKADDR_IN			addrClient;
+				SOCKADDR_IN			addrClient = {};
 				int addrSize = sizeof(addrClient);
 				SOCKET acceptedClientSocket = accept(m_hSocketServer, (SOCKADDR*)&addrClient, &addrSize);
 				printf("%d, (%d.%d.%d.%d) %d ¿¬°áµÊ\n", (int)acceptedClientSocket, addrClient.sin_addr.S_un.S_un_b.s_b1, addrClient.sin_addr.S_un.S_un_b.s_b2, addrClient.sin_addr.S_un.S_un_b.s_b3, addrClient.sin_addr.S_un.S_un_b.s_b4, addrClient.sin_port);

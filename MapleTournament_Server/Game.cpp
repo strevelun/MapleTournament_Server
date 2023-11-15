@@ -121,8 +121,8 @@ void Game::CheckPortal(int _slot)
 	{
 		// 플레이어 랜덤 이동시키고 한번 더 턴을 줌. 그리고 포탈은 비활성화
 		// 서버에서 포탈 비활성화는 -1
-		int newXPos;
-		int newYPos;
+		u_int newXPos;
+		u_int newYPos;
 		do {
 			newXPos = rand() % BoardWidth;
 			newYPos = rand() % BoardHeight;
@@ -165,7 +165,7 @@ void Game::UpdatePortal()
 			m_portalPosition.second = rand() % BoardHeight;
 		} while (m_arrBoard[m_portalPosition.second][m_portalPosition.first].size() >= 1);
 
-		char buffer[255];
+		char buffer[255] = {};
 		ushort count = sizeof(ushort);
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_CreatePortal;			count += sizeof(ushort);
 		*(char*)(buffer + count) = (char)m_portalPosition.first;			count += sizeof(char);
@@ -186,7 +186,7 @@ void Game::SendAll(char* _buffer)
 
 void Game::SendGameOverPacket()
 {
-	char buffer[255];
+	char buffer[255] = {};
 	ushort 	count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;				count += sizeof(ushort);
 	char* score = (char*)(buffer + count);		count += sizeof(char);
@@ -366,7 +366,7 @@ void Game::OnNextTurn()
 				m_arrPlayer[i]->m_eSkillName = eSkillName::None;
 		}
 
-		char buffer[255];
+		char buffer[255] = {};
 		ushort count = sizeof(ushort);
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateDashboard;			count += sizeof(ushort);
 		*(char*)(buffer + count) = (char)GetCurTurn();				count += sizeof(char);
@@ -377,7 +377,7 @@ void Game::OnNextTurn()
 	}
 	Player* pCurPlayer = FindPlayer(curPlayerSlot);
 
-	char buffer[255];
+	char buffer[255] = {};
 	ushort count = sizeof(ushort);
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateTurn;			count += sizeof(ushort);
 	std::vector<eSkillName> skillNameList;
