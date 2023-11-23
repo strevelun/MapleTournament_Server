@@ -14,7 +14,7 @@ private:
 	unsigned int m_count = 0;
 
 	std::vector<unsigned int> m_vecInactiveRoomId;
-	std::array<Room, ROOM_MAX_SIZE> m_arrRoom;
+	std::array<Room, Room::RoomMaxSize> m_arrRoom;
 
 public:
 	Room* CreateRoom(wchar_t* _strTitle);

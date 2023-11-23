@@ -22,14 +22,15 @@ void Selector::Select()
 	int					recvSize = 0, totalSize = 0;
 	u_short				packetSize = 0;
 
-	timeval timeout = { 0, 0 };
-
-	//m_fdReads = m_fdUser;
 	const fd_set_ex& _fdUser = SessionManager::GetInst()->GetFDUser();
 	m_fdReads = _fdUser;
-	int	iRet = select(0, &m_fdReads, 0, 0, &timeout);
-	if (iRet == 0) return;
-	if (iRet == SOCKET_ERROR) return;
+	int	iRet = select(0, &m_fdReads, 0, 0, 0);
+	if (iRet < 1)
+	{
+		int err = GetLastError();
+		printf("에러코드 : %d\n", err);
+		return;
+	}
 
 	for (u_int i = 0; i < _fdUser.fd_count; i++)
 	{
@@ -47,7 +48,7 @@ void Selector::Select()
 				{
 					printf("현재 서버소켓 포함 총 64개이기 때문에 접속 거부됨. (최대 64개)\n");
 					closesocket(acceptedClientSocket);
-					printf("%d 로그아웃 됨\n", (int)acceptedClientSocket);
+					printf("%d 연결거부 됨\n", (int)acceptedClientSocket);
 				}
 			}
 			else
@@ -55,8 +56,11 @@ void Selector::Select()
 				Session* pSession = _fdUser.fd_array_session[i];
 
 				int result = pSession->ReceivePacket();
-				if(result == SOCKET_ERROR || result == 0)
-					SessionManager::GetInst()->RemoveSession(clientSocket);
+				if (result < 1)
+				{
+					SessionManager::GetInst()->RemoveSession(pSession->GetId());
+					continue;
+				}
 
 				pSession->ProcessPacket();
 			}

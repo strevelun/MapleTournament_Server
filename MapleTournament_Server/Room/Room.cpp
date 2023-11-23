@@ -2,7 +2,8 @@
 #include "../User/User.h"
 #include "../Network/Session.h"
 
-Room::Room()
+Room::Room() :
+	m_strTitle{}, m_arrMemberExist{}
 {
 	
 }
@@ -10,16 +11,6 @@ Room::Room()
 Room::~Room()
 {
 	
-}
-
-void Room::Init()
-{
-	for (int i = 0; i < SlotSize; i++)
-	{
-		m_arrMember[i].m_stInfo.slotNumber = i;
-		m_arrMemberExist[i] = false;
-	}
-	m_memberCount = 0;
 }
 
 void Room::AddMember(Session* _pSession, eMemberType _eType)
@@ -30,11 +21,7 @@ void Room::AddMember(Session* _pSession, eMemberType _eType)
 	{
 		if (!m_arrMemberExist[i])
 		{
-			m_arrMember[i].m_id = _pSession->GetId();
-			m_arrMember[i].m_stInfo.pUser = _pSession->GetUser();
-			m_arrMember[i].m_socket = _pSession->GetSocket();
-			m_arrMember[i].m_stInfo.eType = _eType;
-			m_arrMember[i].m_stInfo.eState = _eType == eMemberType::Owner ? eMemberState::Ready : eMemberState::Wait;
+			m_arrMember[i].Init(_pSession, _eType, i);
 			m_arrMemberExist[i] = true;
 			m_memberCount++;
 			return;
@@ -50,14 +37,10 @@ void Room::LeaveMember(Session* _pSession)
 	bool isOwner = false;
 	for (; i < SlotSize; i++)
 	{
-		if (m_arrMember[i].m_id == _pSession->GetId())
+		if (m_arrMember[i].GetId() == _pSession->GetId())
 		{
-			if(m_arrMember[i].m_stInfo.eType == eMemberType::Owner)
+			if(m_arrMember[i].GetType() == eMemberType::Owner)
 				isOwner = true;
-			//m_arrMember[i].m_stInfo.pUser = nullptr;
-			m_arrMember[i].m_stInfo.eType = eMemberType::None;
-			m_arrMember[i].m_stInfo.eState = eMemberState::None;
-			m_arrMember[i].m_stInfo.characterChoice = 0;
 			m_memberCount--;
 			m_arrMemberExist[i] = false;
 			break;
@@ -69,7 +52,7 @@ void Room::LeaveMember(Session* _pSession)
 		for (i = 0; i < SlotSize; i++)
 		{
 			if (!m_arrMemberExist[i]) continue;
-			m_arrMember[i].m_stInfo.eType = eMemberType::Owner;
+			m_arrMember[i].SetType(eMemberType::Owner);
 			break;
 		}
 	}
@@ -79,7 +62,8 @@ const Member* Room::GetRoomOwner() const
 {
 	for (int i = 0; i < SlotSize; i++)
 	{
-		if (m_arrMember[i].GetInfo().eType == eMemberType::Owner)
+		if (!m_arrMemberExist[i]) continue;
+		if (m_arrMember[i].GetType() == eMemberType::Owner)
 			return &m_arrMember[i];
 	}
 	return nullptr;
@@ -89,7 +73,8 @@ const Member* Room::GetMemberInfo(unsigned int _id)
 {
 	for (size_t i = 0; i < SlotSize; i++)
 	{
-		if (m_arrMember[i].m_id == _id)
+		if (!m_arrMemberExist[i]) continue;
+		if (m_arrMember[i].GetId() == _id)
 			return &m_arrMember[i];
 	}
 	return nullptr;
@@ -114,9 +99,10 @@ void Room::SetMemberState(unsigned int _id, eMemberState _state)
 {
 	for (size_t i = 0; i < SlotSize; i++)
 	{
-		if (m_arrMember[i].m_id == _id)
+		if (!m_arrMemberExist[i]) continue;
+		if (m_arrMember[i].GetId() == _id)
 		{
-			m_arrMember[i].m_stInfo.eState = _state;
+			m_arrMember[i].SetState(_state);
 			break;
 		}
 	}
@@ -126,9 +112,10 @@ void Room::SetMemberChoice(unsigned int _id, int _choice)
 {
 	for (size_t i = 0; i < SlotSize; i++)
 	{
-		if (m_arrMember[i].m_id == _id)
+		if (!m_arrMemberExist[i]) continue;
+		if (m_arrMember[i].GetId() == _id)
 		{
-			m_arrMember[i].m_stInfo.characterChoice = _choice;
+			m_arrMember[i].SetChoice(_choice);
 			break;
 		}
 	}
@@ -144,10 +131,19 @@ bool Room::IsRoomReady()
 	if (m_memberCount <= 1) return false;
 	for (size_t i = 0; i < SlotSize; i++)
 	{
-		if (m_arrMember[i].m_stInfo.eState == eMemberState::Wait && m_arrMember[i].m_stInfo.eType == eMemberType::Member)
+		if (!m_arrMemberExist[i]) continue;
+		if (m_arrMember[i].GetState() == eMemberState::Wait && m_arrMember[i].GetType() == eMemberType::Member)
 				return false;
 	}
 	return true;
+}
+
+void Room::Send(char* _buffer, int _slot)
+{
+	if (_slot < 0 || _slot >= 4) return;
+	if (!m_arrMemberExist[_slot]) return;
+
+	send(m_arrMember[_slot].GetSocket(), _buffer, *(u_short*)_buffer, 0);
 }
 
 void Room::SendAll(char* _buffer, Session* _pExceptSession)
@@ -155,7 +151,31 @@ void Room::SendAll(char* _buffer, Session* _pExceptSession)
 	for (int i = 0; i < SlotSize; i++)
 	{
 		if (!m_arrMemberExist[i]) continue;
-		if (_pExceptSession && _pExceptSession->GetSocket() == m_arrMember[i].m_socket) continue;
-		send(m_arrMember[i].m_socket, _buffer, *(u_short*)_buffer, 0);
+		if (_pExceptSession && _pExceptSession->GetSocket() == m_arrMember[i].GetSocket()) continue;
+		send(m_arrMember[i].GetSocket(), _buffer, *(u_short*)_buffer, 0);
 	}
+}
+
+void Member::Init(Session* _pSession, eMemberType _eType, int _slot)
+{
+	m_pSession = _pSession;
+	m_eType = _eType;
+	m_eState = _eType == eMemberType::Owner ? eMemberState::Ready : eMemberState::Wait;
+	m_slotNumber = _slot;
+	m_characterChoice = 0;
+}
+
+const wchar_t* Member::GetNickname() const
+{
+	return m_pSession->GetUser()->GetNickname();
+}
+
+SOCKET Member::GetSocket() const
+{
+	return m_pSession->GetSocket();
+}
+
+unsigned int Member::GetId() const
+{
+	return m_pSession->GetId();
 }

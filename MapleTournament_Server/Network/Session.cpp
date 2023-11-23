@@ -24,9 +24,11 @@ std::map<ePacketType, void(*)(Session*, char*)> Session::m_mapPacketHandlerCallb
 	{ ePacketType::C_CheckHit, PacketHandler::C_CheckHit },
 	{ ePacketType::C_CheckHeal, PacketHandler::C_CheckHeal },
 	{ ePacketType::C_ExitInGame, PacketHandler::C_ExitInGame },
+	{ ePacketType::C_CreatePortal, PacketHandler::C_CreatePortal },
 };
 
-Session::Session()
+Session::Session() :
+	m_socket(0)
 {
 
 }
@@ -35,50 +37,35 @@ Session::~Session()
 {
 }
 
-void Session::Init()
+void Session::Init(SOCKET _socket)
 {
-	m_packet.Init();
+	m_buffer.Init();
 	m_pUser = nullptr;
 	m_pRoom = nullptr;
-	m_socket = 0;
+	m_socket = _socket;
 }
 
 void Session::ProcessPacket()
 {
-	int packetSize = 0;
+	int packetSize = 0, firstPartSize = 0, bufferRecvSize = 0;
 	u_short type; 
+	char* packetBuffer = nullptr ;
 
-	while (m_packet.size >= 2)
+	while (1)
 	{
-		packetSize = *(u_short*)(m_packet.buffer + m_packet.startPos);
+		bufferRecvSize = m_buffer.GetRecvSize();
+		if (bufferRecvSize < 2) break;
+		
+		packetSize = m_buffer.GetPacketSize();
+		if (packetSize > bufferRecvSize) break;
 
-		if (packetSize > m_packet.size) break;
-		if (packetSize < Packet::LeastSize) break;
-
-		if (m_packet.startPos + packetSize > sizeof(m_packet.buffer))
-		{
-			int firstPartSize = sizeof(m_packet.buffer) - m_packet.startPos;
-			memcpy(m_packet.tempBuffer, m_packet.buffer + m_packet.startPos, firstPartSize);
-			memcpy(m_packet.tempBuffer + firstPartSize, m_packet.buffer, packetSize - firstPartSize);
-			char* temp = m_packet.tempBuffer;				temp += sizeof(u_short);
-			type = *(u_short*)temp;							temp += sizeof(u_short);
-			m_mapPacketHandlerCallback[(ePacketType)type](this, temp);
-		}
-		else
-		{
-			char* temp = m_packet.buffer + m_packet.startPos;					temp += sizeof(u_short);
-			type = *(u_short*)temp;												temp += sizeof(u_short);
-
-			m_mapPacketHandlerCallback[(ePacketType)type](this, temp);
-		}
+		packetBuffer = m_buffer.GetPacketStartPos();					packetBuffer += sizeof(u_short);
+		type = *(u_short*)packetBuffer;									packetBuffer += sizeof(u_short);
+		m_mapPacketHandlerCallback[(ePacketType)type](this, packetBuffer);
 
 		if ((ePacketType)type == ePacketType::C_Exit) return;
 
-		m_packet.size -= packetSize;
-		m_packet.startPos = (m_packet.startPos + packetSize) % sizeof(m_packet.buffer);
-
-		if (m_packet.startPos >= Packet::BufferSize - 1)
-			m_packet.MoveRight(1);
+		m_buffer.CheckBufferSizeReadable();
 
 		//printf("%d바이트 패킷 처리완료. 현재 미처리된 패킷 사이즈 : %d\n", packetSize, m_stPacket.size);
 	}
@@ -86,50 +73,57 @@ void Session::ProcessPacket()
 
 int Session::ReceivePacket()
 {
-	int freeSpace = sizeof(m_packet.buffer) - m_packet.endPos;
-	int recvSize = recv(m_socket, m_packet.buffer + m_packet.endPos, freeSpace, 0);
-	if (recvSize == SOCKET_ERROR || recvSize == 0) return recvSize;
-	int extraRecvSize = 0;
-	int packetSize = 0;
-
-	if (recvSize >= sizeof(u_short))
-		packetSize = *(u_short*)(m_packet.buffer + m_packet.startPos);
-
-	if (packetSize <= freeSpace || recvSize == 1)
-	{
-		m_packet.size += recvSize;
-		m_packet.endPos = (m_packet.endPos + recvSize) % sizeof(m_packet.buffer);
-	}
-	else
-	{
-		extraRecvSize = recv(m_socket, m_packet.buffer, sizeof(m_packet.buffer) - m_packet.size, 0);
-		if (extraRecvSize == SOCKET_ERROR || extraRecvSize == 0) return extraRecvSize;
-
-		m_packet.size += recvSize + extraRecvSize;
-		m_packet.endPos = extraRecvSize;
-	}
-	//printf("ReceivePacket %d : (%d ~ %d)\n", m_stPacket.size, m_stPacket.startPos, m_stPacket.endPos);
-
-	return recvSize + extraRecvSize;
+	return m_buffer.Recv(m_socket);
 }
 
-void Session::Packet::Init()
+void Session::Buffer::Init()
 {
 	size = 0;
 	startPos = 0;
 	endPos = 0;
 }
 
-void Session::Packet::MoveRight(int _byteCount)
+void Session::Buffer::CheckBufferSizeReadable()
 {
-	if (_byteCount <= 0 || _byteCount >= BufferSize) return;
+	if (startPos < Buffer::BufferSize - 1) return;
 
-	memcpy(tempBuffer, buffer + BufferSize - _byteCount, _byteCount);
-	memcpy(tempBuffer + _byteCount, buffer, BufferSize - _byteCount);
+	memcpy(tempBuffer, buffer + BufferSize - 1, 1);
+	memcpy(tempBuffer + 1, buffer, BufferSize - 1);
 	memcpy(buffer, tempBuffer, BufferSize);
 
-	startPos = (startPos + _byteCount) % BufferSize;
-	endPos = (endPos + _byteCount) % BufferSize;
+	startPos = (startPos + 1) % BufferSize;
+	endPos = (endPos + 1) % BufferSize;
+}
 
-	printf("MoveRight\n");
+int Session::Buffer::Recv(SOCKET _socket)
+{
+	int recvSpace = endPos < startPos ? startPos - endPos - 1 : BufferSize - endPos;
+	int recvSize = recv(_socket, buffer + endPos, recvSpace, 0);
+	if (recvSize == SOCKET_ERROR || recvSize == 0) return recvSize;
+
+	size += recvSize;
+	endPos = (endPos + recvSize) % BufferSize;
+
+	return recvSize;
+}
+
+char* Session::Buffer::GetPacketStartPos()
+{
+	char* packetBuffer = nullptr;
+	int packetSize = GetPacketSize();
+
+	if (startPos + packetSize > BufferSize)
+	{
+		int firstPartSize = BufferSize - startPos;
+		memcpy(tempBuffer, buffer + startPos, firstPartSize);
+		memcpy(tempBuffer + firstPartSize, buffer, packetSize - firstPartSize);
+		packetBuffer = tempBuffer;			
+	}
+	else
+		packetBuffer = buffer + startPos;					
+
+	size -= packetSize;
+	startPos = (startPos + packetSize) % BufferSize;
+
+	return packetBuffer;
 }

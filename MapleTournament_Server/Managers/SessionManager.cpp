@@ -8,8 +8,8 @@ typedef unsigned short ushort;
 
 SessionManager::SessionManager()
 {
-	m_vecLeftId.resize(CLIENT_SESSION_MAX_SIZE, 0);
-	for (int i = 0; i < CLIENT_SESSION_MAX_SIZE; i++)
+	m_vecLeftId.resize(Session::ClientSessionMaxSize, 0);
+	for (int i = 0; i < Session::ClientSessionMaxSize; i++)
 		m_vecLeftId[i] = i;
 }
 
@@ -26,13 +26,12 @@ bool SessionManager::Init(SOCKET _hSocketServer)
 
 bool SessionManager::RegisterSession(SOCKET _socket)
 {
-	if (m_count >= CLIENT_SESSION_MAX_SIZE) return false;
+	if (m_count >= Session::ClientSessionMaxSize) return false;
 
 	unsigned int id = m_vecLeftId.back();
 	m_vecLeftId.pop_back();
 
-	m_arrSession[id].Init();
-	m_arrSession[id].SetSocket(_socket);
+	m_arrSession[id].Init(_socket);
 	m_arrSession[id].ChangeSessionState(eSessionState::Login);
 	m_arrSession[id].SetId(id);
 	FD_SET_EX(_socket, &m_fdUser, &m_arrSession[id]);
@@ -41,51 +40,43 @@ bool SessionManager::RegisterSession(SOCKET _socket)
 	return true;
 }
 
-Session* SessionManager::FindSession(SOCKET _socket)
+Session* SessionManager::FindSession(unsigned int _id)
 {
-	for (auto& session : m_arrSession)
-	{
-		if (session.GetSessionState() == eSessionState::None) continue;
+	if (_id > Session::ClientSessionMaxSize - 1)		return nullptr;
+	if(m_arrSession[_id].GetSessionState() == eSessionState::None) 	return nullptr;
 
-		if (session.GetSocket() == _socket) return &session;
-	}
-	return nullptr;
+	return &m_arrSession[_id];
 }
 
-bool SessionManager::RemoveSession(SOCKET _socket)
+bool SessionManager::RemoveSession(unsigned int _id)
 {
-	Session* pSession = FindSession(_socket);
+	Session* pSession = FindSession(_id);
 	if (!pSession) return false;
+
+	if (pSession->GetSessionState() != eSessionState::Login)
+		m_mapSessionLogin.erase(_id);
 
 	pSession->ChangeSessionState(eSessionState::None);
 	m_vecLeftId.push_back(pSession->GetId());
 	m_count--;
-	FD_CLR_EX(_socket, &m_fdUser);
-	closesocket(_socket);
+	SOCKET socket = pSession->GetSocket();
+	FD_CLR_EX(socket, &m_fdUser);
+	closesocket(socket);
 	
 	return true;
 }
 
-void SessionManager::GetVecSession(std::vector<Session*>& _vecSession)
+void SessionManager::LoginSession(unsigned int _id)
 {
-	for (auto& session : m_arrSession)
-	{
-		if (session.GetSessionState() == eSessionState::None) continue;
+	Session* pSession = FindSession(_id);
+	if (!pSession) return;
 
-		_vecSession.push_back(&session);
-	}
+	m_mapSessionLogin.insert({ _id, pSession });
 }
 
 u_int SessionManager::GetLoginedUserCount() const
 {
-	u_int loginCount = 0;
-	for (const auto& session : m_arrSession)
-	{
-		eSessionState eState = session.GetSessionState();
-		if (eState == eSessionState::None || eState == eSessionState::Login) continue;
-		loginCount++;
-	}
-	return loginCount;
+	return (u_int)m_mapSessionLogin.size();
 }
 
 void SessionManager::SendAll(char* _pBuffer, eSessionState _eSessionState, SOCKET _exceptSocket)

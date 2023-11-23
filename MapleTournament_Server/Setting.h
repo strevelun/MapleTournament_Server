@@ -53,6 +53,7 @@ enum class ePacketType
 	S_UpdateScore,
 	C_CheckHeal,
 	S_UpdateHeal,
+	C_CreatePortal,
 	S_CreatePortal,
 	S_Teleport,
 	C_ExitInGame,

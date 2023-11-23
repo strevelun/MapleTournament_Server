@@ -4,8 +4,8 @@ RoomManager* RoomManager::m_pInst = nullptr;
 
 RoomManager::RoomManager()
 {
-	m_vecInactiveRoomId.resize(ROOM_MAX_SIZE, 0);
-	for (int i = ROOM_MAX_SIZE - 1, j = 0; i >= 0; i--, j++)
+	m_vecInactiveRoomId.resize(Room::RoomMaxSize, 0);
+	for (int i = Room::RoomMaxSize - 1, j = 0; i >= 0; i--, j++)
 		m_vecInactiveRoomId[i] = j;
 }
 
@@ -15,12 +15,11 @@ RoomManager::~RoomManager()
 
 Room* RoomManager::CreateRoom(wchar_t* _strTitle)
 {
-	if (m_count >= ROOM_MAX_SIZE) return nullptr;
+	if (m_count >= Room::RoomMaxSize) return nullptr;
 	
 	unsigned int id = m_vecInactiveRoomId.back();
 	m_vecInactiveRoomId.pop_back();
 
-	m_arrRoom[id].Init();
 	m_arrRoom[id].SetRoomState(eRoomState::Ready);
 	m_arrRoom[id].SetId(id);
 	m_arrRoom[id].SetTitle(_strTitle);

@@ -9,13 +9,15 @@ class Room;
 
 class Session
 {
-private:
-	class Packet
-	{
-	private:
-		friend class Session;
+public:
+	static constexpr int ClientSessionMaxSize = 63;
 
-	private:
+private:
+	class Buffer
+	{
+	public:
+		//static constexpr int HeaderSize = sizeof(u_short) + sizeof(u_short);
+
 		static constexpr int LeastSize = sizeof(u_short) + sizeof(u_short);
 		static constexpr int BufferSize = 255;
 
@@ -26,9 +28,13 @@ private:
 		int startPos = 0;
 		int endPos = 0;
 
-	private:
+	public:
 		void Init();
-		void MoveRight(int _byteCount);
+		u_short GetPacketSize() const { return *(u_short*)(buffer + startPos);}
+		int GetRecvSize() const { return size; }
+		void CheckBufferSizeReadable();
+		int Recv(SOCKET _socket);
+		char* GetPacketStartPos();
 	};
 
 private:
@@ -38,7 +44,7 @@ private:
 	Room* m_pRoom = nullptr;
 	SOCKET			m_socket;
 
-	Packet m_packet;
+	Buffer m_buffer;
 
 	static std::map<ePacketType, void(*)(Session*, char*)> m_mapPacketHandlerCallback;
 
@@ -46,7 +52,7 @@ public:
 	Session();
 	~Session();
 
-	void Init();
+	void Init(SOCKET _socket);
 
 	void ChangeSessionState(eSessionState _eState) { m_eState = _eState; }
 	eSessionState GetSessionState() const { return m_eState; }

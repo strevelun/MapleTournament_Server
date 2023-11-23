@@ -17,6 +17,5 @@ public: \
 		m_pInst = nullptr; \
 	} 
 
-#define GAME_MAX_ROUND			30
-#define ROOM_MAX_SIZE			63
-#define CLIENT_SESSION_MAX_SIZE		63
+constexpr int UserListPageViewCount = 9;
+constexpr int RoomListPageViewCount = 10;

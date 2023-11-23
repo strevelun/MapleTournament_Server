@@ -25,5 +25,6 @@ public:
 	static void C_CheckHit(Session* _pSession, char* _packet);
 	static void C_CheckHeal(Session* _pSession, char* _packet);
 	static void C_ExitInGame(Session* _pSession, char* _packet);
+	static void C_CreatePortal(Session* _pSession, char* _packet);
 };
 

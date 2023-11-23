@@ -29,46 +29,48 @@ enum class eMemberState
 
 class Member
 {
-	friend class Room;
-
 private:
-	struct _stInfo
-	{
-		User*			pUser = nullptr;
-		eMemberType		eType = eMemberType::None;
-		eMemberState	eState = eMemberState::None;
-		int				slotNumber = 0;
-		int				characterChoice = 0;
-	};
-
-private:
-	unsigned int m_id = 0;
-	SOCKET		m_socket;
-	_stInfo		m_stInfo;
+	Session* m_pSession = nullptr;
+	eMemberType		m_eType = eMemberType::None;
+	eMemberState	m_eState = eMemberState::None;
+	int				m_slotNumber = 0;
+	int				m_characterChoice = 0;
 
 public:
-	unsigned int GetId() const { return m_id; }
-	SOCKET GetSocket() const { return m_socket; }
-	const _stInfo& GetInfo() const { return m_stInfo; }
+	void Init(Session* _pSession, eMemberType _eType, int _slot);
+
+	unsigned int GetId() const;
+	const wchar_t* GetNickname() const;
+	eMemberType GetType() const { return m_eType; }
+	eMemberState GetState() const { return m_eState; }
+	SOCKET GetSocket() const;
+	int GetSlot() const { return m_slotNumber; }
+	int GetChoice() const { return m_characterChoice; }
+
+	void SetType(eMemberType _eType) { m_eType = _eType; }
+	void SetState(eMemberState _eState) { m_eState = _eState; }
+	void SetChoice(int _characterChoice) { m_characterChoice = _characterChoice; }
 };
 
 class Room
 {
 public:
 	static constexpr int SlotSize = 4;
+	static constexpr int RoomMaxSize = 63;
+
 private:
 	unsigned int m_id = 0; 
 	eRoomState m_eState = eRoomState::None;
 	wchar_t m_strTitle[20];
 	std::array<Member, SlotSize>		 m_arrMember;
-	std::array<bool, SlotSize>		 m_arrMemberExist;
+	std::array<bool, SlotSize>		 m_arrMemberExist = {};
 	unsigned int m_memberCount = 0;
 
 public:
 	Room();
 	~Room();
 
-	void Init();
+	//void Init();
 
 	void AddMember(Session* _pSession, eMemberType _eType = eMemberType::Member);
 	void LeaveMember(Session* _pSession);
@@ -89,6 +91,7 @@ public:
 
 	bool IsMemberExist(int _slot);
 	bool IsRoomReady();
+	void Send(char* _buffer, int _slot);
 	void SendAll(char* _buffer, Session* _pExceptSession = nullptr);
 };
 

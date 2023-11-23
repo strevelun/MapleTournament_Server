@@ -23,8 +23,8 @@ private:
 	bool m_bStandby = false;
 	int m_score = 0; // Å³ ¼ö
 	int m_slot = 0;
-	int m_hp = 20;
-	int m_mana = 10;
+	int m_hp = HPMax;
+	int m_mana = MPMax;
 	int m_xpos = 0, m_ypos = 0;
 	bool m_bAlive = true;
 	bool m_bWaitForPortal = false;

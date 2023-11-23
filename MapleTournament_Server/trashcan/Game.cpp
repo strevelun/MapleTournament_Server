@@ -1,12 +1,9 @@
 #include "Game.h"
 #include "Network/Session.h"
 #include "Defines.h"
-#include "Managers/SkillManager.h"
 #include "Managers/SessionManager.h"
 #include "Network/Session.h"
 #include "User/User.h"
-#include "Skill/Skill.h"
-#include "Skill/SkillAttack.h"
 
 typedef unsigned short ushort;
 

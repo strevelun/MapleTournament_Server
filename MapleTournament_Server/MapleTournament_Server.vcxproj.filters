@@ -22,12 +22,6 @@
     <Filter Include="Network">
       <UniqueIdentifier>{bb4be494-14bc-4fa1-9080-43a210db29ae}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libs">
-      <UniqueIdentifier>{e5bab644-49c2-4fd4-9709-8ed001ac5be9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Skill">
-      <UniqueIdentifier>{fb4e6bd7-8878-49bd-b92f-1301db0b9d30}</UniqueIdentifier>
-    </Filter>
     <Filter Include="User">
       <UniqueIdentifier>{0dd84461-c4d8-486e-9af1-0ded1b6543a9}</UniqueIdentifier>
     </Filter>
@@ -62,27 +56,6 @@
     </ClCompile>
     <ClCompile Include="Managers\UserManager.cpp">
       <Filter>Managers</Filter>
-    </ClCompile>
-    <ClCompile Include="Game.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Managers\GameManager.cpp">
-      <Filter>Managers</Filter>
-    </ClCompile>
-    <ClCompile Include="Managers\SkillManager.cpp">
-      <Filter>Managers</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dist\jsoncpp.cpp">
-      <Filter>Libs</Filter>
-    </ClCompile>
-    <ClCompile Include="Skill\Skill.cpp">
-      <Filter>Skill</Filter>
-    </ClCompile>
-    <ClCompile Include="Skill\SkillAttack.cpp">
-      <Filter>Skill</Filter>
-    </ClCompile>
-    <ClCompile Include="Skill\SkillHeal.cpp">
-      <Filter>Skill</Filter>
     </ClCompile>
     <ClCompile Include="Room\Room.cpp">
       <Filter>Room</Filter>
@@ -119,32 +92,11 @@
     <ClInclude Include="Managers\UserManager.h">
       <Filter>Managers</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Managers\GameManager.h">
-      <Filter>Managers</Filter>
-    </ClInclude>
     <ClInclude Include="Defines.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Managers\SkillManager.h">
       <Filter>Managers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\dist\json\json.h">
-      <Filter>Libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\dist\json\json-forwards.h">
-      <Filter>Libs</Filter>
-    </ClInclude>
-    <ClInclude Include="Skill\Skill.h">
-      <Filter>Skill</Filter>
-    </ClInclude>
-    <ClInclude Include="Skill\SkillAttack.h">
-      <Filter>Skill</Filter>
-    </ClInclude>
-    <ClInclude Include="Skill\SkillHeal.h">
-      <Filter>Skill</Filter>
     </ClInclude>
     <ClInclude Include="Room\Room.h">
       <Filter>Room</Filter>
