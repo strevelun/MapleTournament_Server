@@ -638,6 +638,8 @@ void PacketHandler::C_NextTurn(Session* _pSession, char* _packet)
 
 void PacketHandler::C_GameOver(Session* _pSession, char* _packet)
 {
+	User* pUser = _pSession->GetUser();
+	pUser->AddKillCount(*(char*)_packet);
 	Room* pRoom = _pSession->GetRoom();
 	pRoom->SetRoomState(eRoomState::Ready);
 	_pSession->ChangeSessionState(eSessionState::WaitingRoom);
@@ -826,8 +828,8 @@ void PacketHandler::C_ExitInGame(Session* _pSession, char* _packet)
 		pGame->OnNextTurn();
 	}
 	*/
-	User* pUser = _pSession->GetUser();
-	pUser->AddKillCount(*(char*)_packet);
+	//User* pUser = _pSession->GetUser();
+	//pUser->AddKillCount(*(char*)_packet);
 	_pSession->SetRoom(nullptr);
 	_pSession->ChangeSessionState(eSessionState::Lobby);
 	pRoom->LeaveMember(_pSession);
