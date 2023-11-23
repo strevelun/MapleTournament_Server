@@ -82,11 +82,13 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 		unsigned int roomId = pRoom->GetId();
 		pRoom->LeaveMember(_pSession);
 		unsigned int memberCount = pRoom->GetMemberCount();
+		const Member* pNewOwner = pRoom->GetRoomOwner();
 
 		if (eState == eSessionState::InGame)
 		{
 			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateIngameUserLeave;				count += sizeof(ushort);
 			*(char*)(buffer + count) = (char)pMember->GetSlot();					count += sizeof(char);
+			*(char*)(buffer + count) = (char)pNewOwner->GetSlot();					count += sizeof(char);
 			*(ushort*)buffer = count;
 			pRoom->SendAll(buffer);
 
@@ -105,7 +107,6 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 		}
 		else if (eState == eSessionState::WaitingRoom)
 		{
-			const Member* pNewOwner = pRoom->GetRoomOwner();
 
 			count = sizeof(ushort);
 			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateRoomMemberLeave;				count += sizeof(ushort);
