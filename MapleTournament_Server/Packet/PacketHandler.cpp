@@ -86,16 +86,17 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 
 		if (eState == eSessionState::InGame)
 		{
-			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateIngameUserLeave;				count += sizeof(ushort);
-			*(char*)(buffer + count) = (char)pMember->GetSlot();					count += sizeof(char);
-			*(char*)(buffer + count) = (char)pNewOwner->GetSlot();					count += sizeof(char);
-			*(ushort*)buffer = count;
-			pRoom->SendAll(buffer);
-
-			if (memberCount <= 1) 
+			if (memberCount == 1) 
 			{
-				ushort 	count = sizeof(ushort);
 				*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;				count += sizeof(ushort);
+				*(ushort*)buffer = count;
+				pRoom->SendAll(buffer);
+			}
+			else if(memberCount > 1)
+			{
+				*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateIngameUserLeave;				count += sizeof(ushort);
+				*(char*)(buffer + count) = (char)pMember->GetSlot();					count += sizeof(char);
+				*(char*)(buffer + count) = (char)pNewOwner->GetSlot();					count += sizeof(char);
 				*(ushort*)buffer = count;
 				pRoom->SendAll(buffer);
 			}
@@ -282,8 +283,6 @@ void PacketHandler::C_LeaveRoom(Session* _pSession, char* _packet)
 		*(ushort*)buffer = temp - buffer;
 		pRoom->SendAll(buffer);
 		*/
-
-
 
 		count = sizeof(ushort);
 		*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateRoomMemberLeave;				count += sizeof(ushort);
