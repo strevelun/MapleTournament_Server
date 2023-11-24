@@ -84,19 +84,18 @@ void PacketHandler::C_Exit(Session* _pSession, char* _packet)
 		unsigned int memberCount = pRoom->GetMemberCount();
 		const Member* pNewOwner = pRoom->GetRoomOwner();
 
-		if (eState == eSessionState::InGame)
+		if (eState == eSessionState::InGame && memberCount >= 1)
 		{
+			*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateIngameUserLeave;				count += sizeof(ushort);
+			*(char*)(buffer + count) = (char)pMember->GetSlot();					count += sizeof(char);
+			*(char*)(buffer + count) = (char)pNewOwner->GetSlot();					count += sizeof(char);
+			*(ushort*)buffer = count;
+			pRoom->SendAll(buffer);
+
 			if (memberCount == 1) 
 			{
+				count = sizeof(ushort);
 				*(ushort*)(buffer + count) = (ushort)ePacketType::S_GameOver;				count += sizeof(ushort);
-				*(ushort*)buffer = count;
-				pRoom->SendAll(buffer);
-			}
-			else if(memberCount > 1)
-			{
-				*(ushort*)(buffer + count) = (ushort)ePacketType::S_UpdateIngameUserLeave;				count += sizeof(ushort);
-				*(char*)(buffer + count) = (char)pMember->GetSlot();					count += sizeof(char);
-				*(char*)(buffer + count) = (char)pNewOwner->GetSlot();					count += sizeof(char);
 				*(ushort*)buffer = count;
 				pRoom->SendAll(buffer);
 			}
@@ -574,6 +573,7 @@ void PacketHandler::C_UpdateUserSlot(Session* _pSession, char* _packet)
 void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 {
 	eActionType type = eActionType(*(char*)_packet);				_packet += sizeof(char);
+	eSkillName name = eSkillName(*(char*)_packet);				_packet += sizeof(char);
 
 	u_int id = _pSession->GetId();
 	Room* pRoom = _pSession->GetRoom();
@@ -586,7 +586,7 @@ void PacketHandler::C_Skill(Session* _pSession, char* _packet)
 	*(ushort*)(buffer + count) = (ushort)ePacketType::S_Skill;			count += sizeof(ushort);
 	*(char*)(buffer + count) = (char)slot;						count += sizeof(char);
 	*(char*)(buffer + count) = (char)type;								count += sizeof(char);
-	*(char*)(buffer + count) = *(char*)_packet;							count += sizeof(char);
+	*(char*)(buffer + count) = (char)name;							count += sizeof(char);
 	*(ushort*)buffer = count;
 	pRoom->SendAll(buffer);
 }
