@@ -16,9 +16,7 @@ private:
 	class Buffer
 	{
 	public:
-		//static constexpr int HeaderSize = sizeof(u_short) + sizeof(u_short);
-
-		static constexpr int LeastSize = sizeof(u_short) + sizeof(u_short);
+		static constexpr int HeaderSize = sizeof(u_short) + sizeof(u_short);
 		static constexpr int BufferSize = 255;
 
 	private:
